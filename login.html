@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nomi — Acceder</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f5f4;
+  --surface: #ffffff;
+  --border: #e7e5e4;
+  --border2: #d6d3d1;
+  --text: #1c1917;
+  --muted: #78716c;
+  --muted2: #a8a29e;
+  --blue: #2563eb;
+  --blue-d: #1d4ed8;
+  --blue-s: #eff6ff;
+  --green: #16a34a;
+  --red: #dc2626;
+  --red-s: #fef2f2;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,.10);
+}
+html, body { height: 100%; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── SPLIT LAYOUT ── */
+.auth-left {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px;
+  background: var(--bg);
+}
+.auth-right {
+  width: 480px; flex-shrink: 0;
+  background: linear-gradient(145deg, #1e3a8a 0%, #2563eb 55%, #4f46e5 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48px;
+  color: #fff;
+  position: relative; overflow: hidden;
+}
+.auth-right::before {
+  content: '';
+  position: absolute; top: -80px; right: -80px;
+  width: 300px; height: 300px;
+  background: rgba(255,255,255,.05);
+  border-radius: 50%;
+}
+.auth-right::after {
+  content: '';
+  position: absolute; bottom: -60px; left: -60px;
+  width: 200px; height: 200px;
+  background: rgba(255,255,255,.04);
+  border-radius: 50%;
+}
+
+/* ── FORM CARD ── */
+.auth-card {
+  width: 100%; max-width: 400px;
+}
+.auth-logo {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; margin-bottom: 36px;
+}
+.auth-logo-mark {
+  width: 36px; height: 36px; background: var(--blue);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.auth-logo-mark svg { width: 18px; height: 18px; }
+.auth-logo-name { font-size: 20px; font-weight: 800; color: var(--text); letter-spacing: -.4px; }
+
+.auth-title { font-size: 24px; font-weight: 800; letter-spacing: -.5px; margin-bottom: 6px; }
+.auth-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--text); margin-bottom: 6px;
+}
+.form-input {
+  width: 100%; padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius); font-size: 14px;
+  color: var(--text); background: var(--surface);
+  font-family: inherit; outline: none;
+  transition: border-color .12s, box-shadow .12s;
+}
+.form-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.form-input.error { border-color: var(--red); }
+.form-input.error:focus { box-shadow: 0 0 0 3px rgba(220,38,38,.1); }
+
+.form-error {
+  font-size: 12px; color: var(--red);
+  margin-top: 5px; display: none;
+}
+.form-error.show { display: block; }
+
+.password-wrap { position: relative; }
+.password-toggle {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--muted2);
+  padding: 4px; display: flex; align-items: center;
+}
+.password-toggle:hover { color: var(--muted); }
+.password-toggle svg { width: 16px; height: 16px; }
+
+.btn-submit {
+  width: 100%; padding: 11px;
+  background: var(--blue); color: #fff;
+  font-size: 14px; font-weight: 700;
+  border: none; border-radius: var(--radius);
+  cursor: pointer; font-family: inherit;
+  transition: all .12s; margin-top: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-submit:hover { background: var(--blue-d); }
+.btn-submit:disabled { opacity: .6; cursor: not-allowed; }
+
+.auth-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 20px 0; color: var(--muted2); font-size: 12px;
+}
+.auth-divider::before, .auth-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+.btn-google {
+  width: 100%; padding: 10px;
+  background: var(--surface); color: var(--text);
+  font-size: 14px; font-weight: 600;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  cursor: pointer; font-family: inherit;
+  transition: all .12s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.btn-google:hover { border-color: var(--border2); box-shadow: var(--shadow); }
+
+.auth-switch { text-align: center; margin-top: 22px; font-size: 13px; color: var(--muted); }
+.auth-switch a { color: var(--blue); font-weight: 600; text-decoration: none; cursor: pointer; }
+.auth-switch a:hover { text-decoration: underline; }
+
+.forgot-link { font-size: 12px; color: var(--blue); float: right; text-decoration: none; }
+.forgot-link:hover { text-decoration: underline; }
+
+/* ── GLOBAL ERROR BANNER ── */
+.global-error {
+  background: var(--red-s); border: 1px solid rgba(220,38,38,.2);
+  color: var(--red); border-radius: var(--radius);
+  padding: 10px 14px; font-size: 13px; font-weight: 500;
+  margin-bottom: 16px; display: none;
+}
+.global-error.show { display: block; }
+
+/* ── SUCCESS ── */
+.success-screen {
+  text-align: center; display: none;
+}
+.success-screen.show { display: block; }
+.success-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: #f0fdf4; border: 2px solid rgba(22,163,74,.2);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 28px;
+}
+.success-screen h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+.success-screen p { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+
+/* ── RIGHT PANEL CONTENT ── */
+.promo-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,.12); color: rgba(255,255,255,.9);
+  font-size: 12px; font-weight: 600;
+  padding: 5px 14px; border-radius: 99px;
+  border: 1px solid rgba(255,255,255,.15);
+  margin-bottom: 28px;
+}
+.promo-title { font-size: 28px; font-weight: 800; letter-spacing: -.8px; line-height: 1.2; margin-bottom: 16px; }
+.promo-sub { font-size: 15px; opacity: .8; line-height: 1.65; margin-bottom: 36px; }
+.promo-features { display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 1; }
+.promo-feature { display: flex; align-items: flex-start; gap: 12px; }
+.promo-feature-icon {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: rgba(255,255,255,.12); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; margin-top: 1px;
+}
+.promo-feature-text { font-size: 14px; opacity: .85; line-height: 1.5; }
+.promo-feature-text strong { color: #fff; font-weight: 600; display: block; opacity: 1; }
+
+/* ── TABS ── */
+.auth-tabs { display: flex; gap: 2px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 3px; margin-bottom: 28px; }
+.auth-tab {
+  flex: 1; text-align: center; padding: 7px;
+  font-size: 13px; font-weight: 600; border-radius: 7px;
+  cursor: pointer; color: var(--muted); transition: all .12s;
+}
+.auth-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+
+/* Terms checkbox */
+.terms-row { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 16px; }
+.terms-row input[type="checkbox"] { margin-top: 2px; width: 15px; height: 15px; cursor: pointer; accent-color: var(--blue); flex-shrink: 0; }
+.terms-row label { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.terms-row a { color: var(--blue); text-decoration: none; }
+.terms-row a:hover { text-decoration: underline; }
+
+@media (max-width: 768px) {
+  body { flex-direction: column; }
+  .auth-right { width: 100%; min-height: 200px; padding: 32px 24px; order: -1; }
+  .auth-right .promo-features { display: none; }
+  .promo-title { font-size: 20px; }
+  .promo-sub { font-size: 14px; margin-bottom: 0; }
+  .auth-left { padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- FORM SIDE -->
+<div class="auth-left">
+  <div class="auth-card">
+    <a href="index.html" class="auth-logo">
+      <div class="auth-logo-mark">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M3 11L5.5 5L8 8.5L10 6.5L13 11H3Z" fill="white" stroke="white" stroke-width=".5" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="auth-logo-name">Nomi</span>
+    </a>
+
+    <!-- Tabs login/signup -->
+    <div class="auth-tabs">
+      <div class="auth-tab" id="tab-login" onclick="switchTab('login')">Iniciar sesión</div>
+      <div class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Crear cuenta</div>
+    </div>
+
+    <!-- Global error -->
+    <div class="global-error" id="global-error"></div>
+
+    <!-- ── LOGIN FORM ── -->
+    <div id="form-login">
+      <h1 class="auth-title">Bienvenido de nuevo</h1>
+      <p class="auth-sub">Accede a tu cuenta de Nomi</p>
+
+      <div class="form-group">
+        <label class="form-label" for="login-email">Email</label>
+        <input class="form-input" id="login-email" type="email" placeholder="tu@email.com" autocomplete="email">
+        <div class="form-error" id="login-email-err">Introduce un email válido</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-pass">
+          Contraseña
+          <a href="#" class="forgot-link" onclick="showForgot(event)">¿La olvidaste?</a>
+        </label>
+        <div class="password-wrap">
+          <input class="form-input" id="login-pass" type="password" placeholder="Tu contraseña" autocomplete="current-password">
+          <button class="password-toggle" type="button" onclick="togglePassword('login-pass',this)">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg>
+          </button>
+        </div>
+        <div class="form-error" id="login-pass-err">Contraseña incorrecta</div>
+      </div>
+
+      <button class="btn-submit" id="btn-login" onclick="doLogin()">
+        <svg viewBox="0 0 16 16" fill="none" width="15" height="15"><path d="M6 3H3a1 1 0 00-1 1v8a1 1 0 001 1h3M10 11l3-3-3-3M13 8H7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Entrar a mi cuenta
+      </button>
+
+      <div class="auth-divider">o continúa con</div>
+
+      <button class="btn-google" onclick="doSocialLogin('Google')">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+        Continuar con Google
+      </button>
+
+      <div class="auth-switch">
+        ¿No tienes cuenta? <a onclick="switchTab('signup')">Regístrate gratis</a>
+      </div>
+    </div>
+
+    <!-- ── SIGNUP FORM ── -->
+    <div id="form-signup" style="display:none">
+      <h1 class="auth-title">Crea tu cuenta gratis</h1>
+      <p class="auth-sub">30 días gratis, sin tarjeta de crédito</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label" for="signup-nombre">Nombre</label>
+          <input class="form-input" id="signup-nombre" type="text" placeholder="Miguel" autocomplete="given-name">
+          <div class="form-error" id="signup-nombre-err">Introduce tu nombre</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="signup-apellido">Apellido</label>
+          <input class="form-input" id="signup-apellido" type="text" placeholder="Martínez" autocomplete="family-name">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="signup-negocio">Nombre de tu negocio</label>
+        <input class="form-input" id="signup-negocio" type="text" placeholder="Ej: Frutería Martínez" autocomplete="organization">
+        <div class="form-error" id="signup-negocio-err">Introduce el nombre de tu negocio</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="signup-tipo">Tipo de negocio</label>
+        <select class="form-input" id="signup-tipo">
+          <option value="">Selecciona...</option>
+          <option value="fruteria">🍊 Frutería / Alimentación</option>
+          <option value="bar">🍺 Bar / Restaurante</option>
+          <option value="peluqueria">✂️ Peluquería / Estética</option>
+          <option value="taller">🔧 Taller / Reparaciones</option>
+          <option value="tienda">👗 Tienda / Comercio</option>
+          <option value="servicios">💼 Servicios profesionales</option>
+          <option value="otro">📦 Otro</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="signup-email">Email</label>
+        <input class="form-input" id="signup-email" type="email" placeholder="tu@email.com" autocomplete="email">
+        <div class="form-error" id="signup-email-err">Introduce un email válido</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="signup-pass">Contraseña</label>
+        <div class="password-wrap">
+          <input class="form-input" id="signup-pass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+          <button class="password-toggle" type="button" onclick="togglePassword('signup-pass',this)">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg>
+          </button>
+        </div>
+        <div class="form-error" id="signup-pass-err">La contraseña debe tener al menos 6 caracteres</div>
+      </div>
+
+      <div class="terms-row">
+        <input type="checkbox" id="terms-check">
+        <label for="terms-check">Acepto los <a href="legal.html#terminos" target="_blank">Términos y condiciones</a> y la <a href="legal.html#privacidad" target="_blank">Política de privacidad</a></label>
+      </div>
+
+      <button class="btn-submit" id="btn-signup" onclick="doSignup()">
+        <svg viewBox="0 0 16 16" fill="none" width="15" height="15"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        Crear mi cuenta gratis
+      </button>
+
+      <div class="auth-divider">o regístrate con</div>
+
+      <button class="btn-google" onclick="doSocialLogin('Google')">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+        Continuar con Google
+      </button>
+
+      <div class="auth-switch">
+        ¿Ya tienes cuenta? <a onclick="switchTab('login')">Inicia sesión</a>
+      </div>
+    </div>
+
+    <!-- ── SUCCESS SCREEN ── -->
+    <div id="screen-success" class="success-screen">
+      <div class="success-icon">✓</div>
+      <h2>¡Cuenta creada!</h2>
+      <p>Bienvenido a Nomi. Redirigiendo a tu dashboard...</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- PROMO SIDE -->
+<div class="auth-right">
+  <div style="position:relative;z-index:1;width:100%">
+    <div class="promo-badge">⭐ 30 días gratis · Sin tarjeta</div>
+    <h2 class="promo-title">Todo tu negocio en un solo sitio</h2>
+    <p class="promo-sub">Caja, facturas, inventario e impuestos. Sin complicaciones.</p>
+    <div class="promo-features">
+      <div class="promo-feature">
+        <div class="promo-feature-icon">🧾</div>
+        <div class="promo-feature-text">
+          <strong>Caja y Ventas en tiempo real</strong>
+          Registra cada venta al instante. Ve el total del día con un vistazo.
+        </div>
+      </div>
+      <div class="promo-feature">
+        <div class="promo-feature-icon">📄</div>
+        <div class="promo-feature-text">
+          <strong>Facturas en segundos</strong>
+          Crea, envía y cobra facturas profesionales con tu logo.
+        </div>
+      </div>
+      <div class="promo-feature">
+        <div class="promo-feature-icon">📊</div>
+        <div class="promo-feature-text">
+          <strong>P&L automático</strong>
+          Tus ingresos, gastos y beneficio neto calculados solos.
+        </div>
+      </div>
+      <div class="promo-feature">
+        <div class="promo-feature-icon">🏛️</div>
+        <div class="promo-feature-text">
+          <strong>IVA y Hacienda sin dolor</strong>
+          El trimestre cuadrado sin tocar un Excel.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Read URL params ──
+const params = new URLSearchParams(location.search);
+const mode = params.get('mode') || 'login';
+const plan = params.get('plan') || '';
+
+// ── Init ──
+switchTab(mode);
+if (plan) sessionStorage.setItem('nomi_plan', plan);
+
+// ── Check if already logged in ──
+const session = localStorage.getItem('nomi_session');
+if (session) {
+  try {
+    const s = JSON.parse(session);
+    if (s && s.email) window.location.replace('nomi-app.html');
+  } catch(e) {}
+}
+
+function switchTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('tab-login').classList.toggle('active', isLogin);
+  document.getElementById('tab-signup').classList.toggle('active', !isLogin);
+  document.getElementById('form-login').style.display = isLogin ? 'block' : 'none';
+  document.getElementById('form-signup').style.display = isLogin ? 'none' : 'block';
+  document.getElementById('screen-success').classList.remove('show');
+  clearErrors();
+  // Update URL without reload
+  const url = new URL(location.href);
+  url.searchParams.set('mode', tab);
+  history.replaceState(null, '', url);
+}
+
+function clearErrors() {
+  document.getElementById('global-error').classList.remove('show');
+  document.querySelectorAll('.form-error').forEach(e => e.classList.remove('show'));
+  document.querySelectorAll('.form-input').forEach(i => i.classList.remove('error'));
+}
+
+function showGlobalError(msg) {
+  const el = document.getElementById('global-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function showFieldError(fieldId, errId) {
+  document.getElementById(fieldId).classList.add('error');
+  document.getElementById(errId).classList.add('show');
+}
+
+function togglePassword(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  const isText = inp.type === 'text';
+  inp.type = isText ? 'password' : 'text';
+  btn.innerHTML = isText
+    ? '<svg viewBox="0 0 16 16" fill="none"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg>'
+    : '<svg viewBox="0 0 16 16" fill="none"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5zM3 3l10 10" stroke="currentColor" stroke-width="1.3"/></svg>';
+}
+
+function doLogin() {
+  clearErrors();
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+
+  let valid = true;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showFieldError('login-email', 'login-email-err');
+    valid = false;
+  }
+  if (!pass) {
+    showFieldError('login-pass', 'login-pass-err');
+    valid = false;
+  }
+  if (!valid) return;
+
+  // Check registered users
+  const users = JSON.parse(localStorage.getItem('nomi_users') || '[]');
+  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+  if (!user) {
+    showGlobalError('No existe ninguna cuenta con ese email. ¿Quieres registrarte?');
+    return;
+  }
+  if (user.password !== hashPass(pass)) {
+    showFieldError('login-pass', 'login-pass-err');
+    document.getElementById('login-pass-err').textContent = 'Contraseña incorrecta';
+    return;
+  }
+
+  // Save session
+  const session = { email: user.email, nombre: user.nombre, negocio: user.negocio, tipo: user.tipo, ts: Date.now() };
+  localStorage.setItem('nomi_session', JSON.stringify(session));
+  localStorage.setItem('nomi_negocio_nombre', user.negocio || 'Mi Negocio');
+  localStorage.setItem('nomi_user_nombre', user.nombre || '');
+
+  // Show success briefly and redirect
+  showSuccess('Bienvenido de nuevo, ' + (user.nombre || 'amigo') + '!');
+}
+
+function doSignup() {
+  clearErrors();
+  const nombre = document.getElementById('signup-nombre').value.trim();
+  const negocio = document.getElementById('signup-negocio').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const pass = document.getElementById('signup-pass').value;
+  const terms = document.getElementById('terms-check').checked;
+
+  let valid = true;
+  if (!nombre) { showFieldError('signup-nombre', 'signup-nombre-err'); valid = false; }
+  if (!negocio) { showFieldError('signup-negocio', 'signup-negocio-err'); valid = false; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showFieldError('signup-email', 'signup-email-err');
+    valid = false;
+  }
+  if (!pass || pass.length < 6) {
+    showFieldError('signup-pass', 'signup-pass-err');
+    valid = false;
+  }
+  if (!terms) {
+    showGlobalError('Debes aceptar los términos y condiciones para continuar.');
+    valid = false;
+  }
+  if (!valid) return;
+
+  // Check duplicate
+  const users = JSON.parse(localStorage.getItem('nomi_users') || '[]');
+  if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+    showFieldError('signup-email', 'signup-email-err');
+    document.getElementById('signup-email-err').textContent = 'Ya existe una cuenta con ese email. Inicia sesión.';
+    return;
+  }
+
+  const tipo = document.getElementById('signup-tipo').value;
+  const newUser = {
+    email, nombre,
+    apellido: document.getElementById('signup-apellido').value.trim(),
+    negocio, tipo,
+    password: hashPass(pass),
+    plan: plan || sessionStorage.getItem('nomi_plan') || 'basico',
+    createdAt: new Date().toISOString()
+  };
+  users.push(newUser);
+  localStorage.setItem('nomi_users', JSON.stringify(users));
+
+  // Save session
+  const session = { email, nombre, negocio, tipo, ts: Date.now() };
+  localStorage.setItem('nomi_session', JSON.stringify(session));
+  localStorage.setItem('nomi_negocio_nombre', negocio);
+  localStorage.setItem('nomi_user_nombre', nombre);
+
+  showSuccess('¡Cuenta creada! Bienvenido a Nomi, ' + nombre + '.');
+}
+
+function doSocialLogin(provider) {
+  // Demo: simulate social login
+  const session = {
+    email: 'usuario@demo.com',
+    nombre: 'Usuario Demo',
+    negocio: 'Mi Negocio',
+    tipo: 'otro',
+    provider,
+    ts: Date.now()
+  };
+  localStorage.setItem('nomi_session', JSON.stringify(session));
+  localStorage.setItem('nomi_negocio_nombre', 'Mi Negocio');
+  localStorage.setItem('nomi_user_nombre', 'Usuario Demo');
+  showSuccess('Conectado con ' + provider + '. Redirigiendo...');
+}
+
+function showSuccess(msg) {
+  document.getElementById('form-login').style.display = 'none';
+  document.getElementById('form-signup').style.display = 'none';
+  const sc = document.getElementById('screen-success');
+  sc.querySelector('p').textContent = msg + ' Redirigiendo a tu dashboard...';
+  sc.classList.add('show');
+  setTimeout(() => { window.location.replace('nomi-app.html'); }, 1500);
+}
+
+function showForgot(e) {
+  e.preventDefault();
+  alert('Recuperación de contraseña: en breve recibirás un email (funcionalidad próximamente).');
+}
+
+// Simple hash (not for production — for demo purposes)
+function hashPass(p) {
+  let h = 0;
+  for (let i = 0; i < p.length; i++) { h = Math.imul(31, h) + p.charCodeAt(i) | 0; }
+  return h.toString(36);
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const tab = document.getElementById('form-login').style.display !== 'none' ? 'login' : 'signup';
+  if (tab === 'login') doLogin();
+  else doSignup();
+});
+</script>
+</body>
+</html>

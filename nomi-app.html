@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nomi — Gestión de tu negocio</title>
+<script>
+// Auth guard — redirect to login if no session
+(function(){
+  var s = localStorage.getItem('nomi_session');
+  if (!s) { window.location.replace('login.html'); return; }
+  try { var p = JSON.parse(s); if (!p || !p.email) window.location.replace('login.html'); } catch(e) { window.location.replace('login.html'); }
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -579,10 +587,10 @@ select.form-input { cursor: pointer; }
   </div>
 
   <div class="sb-business">
-    <div class="sb-biz-icon">🍊</div>
+    <div class="sb-biz-icon" id="sb-biz-icon">🏪</div>
     <div class="sb-biz-info">
-      <div class="sb-biz-name">Frutería Martínez</div>
-      <div class="sb-biz-type">Comercio · Autónomo</div>
+      <div class="sb-biz-name" id="sb-biz-name">Mi Negocio</div>
+      <div class="sb-biz-type" id="sb-biz-type">Comercio · Autónomo</div>
     </div>
     <svg class="sb-biz-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none">
       <path d="M3.5 5.5L7 9L10.5 5.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -673,12 +681,15 @@ select.form-input { cursor: pointer; }
     </div>
   </nav>
 
-  <div class="sb-footer">
-    <div class="sb-avatar">M</div>
-    <div>
-      <div class="sb-user-name">Miguel Martínez</div>
-      <div class="sb-user-plan" data-es="Plan Básico · €9/mes" data-en="Basic Plan · €9/mo">Plan Básico · €9/mes</div>
+  <div class="sb-footer" onclick="showPage('ajustes', document.querySelector('.sb-item[onclick*=ajustes]'))">
+    <div class="sb-avatar" id="sb-avatar-letter">M</div>
+    <div style="flex:1;min-width:0">
+      <div class="sb-user-name" id="sb-user-name">Miguel Martínez</div>
+      <div class="sb-user-plan" id="sb-user-plan">Plan Básico · €9/mes</div>
     </div>
+    <button onclick="event.stopPropagation();doLogout()" title="Cerrar sesión" style="background:none;border:none;cursor:pointer;color:var(--muted2);padding:4px;display:flex;align-items:center">
+      <svg viewBox="0 0 16 16" fill="none" width="15" height="15"><path d="M6 3H3a1 1 0 00-1 1v8a1 1 0 001 1h3M10 11l3-3-3-3M13 8H6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
   </div>
 </aside>
 
@@ -2666,8 +2677,43 @@ function initCookieBanner() {
 
 
 
+// ── SESSION ─────────────────────────────────────────────────
+const TIPO_ICONS = { fruteria:'🍊', bar:'🍺', peluqueria:'✂️', taller:'🔧', tienda:'👗', servicios:'💼', otro:'🏪' };
+const TIPO_LABELS = { fruteria:'Alimentación', bar:'Bar / Restaurante', peluqueria:'Peluquería', taller:'Taller', tienda:'Tienda', servicios:'Servicios', otro:'Negocio' };
+
+function loadSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem('nomi_session') || '{}');
+    const negocio = s.negocio || localStorage.getItem('nomi_negocio_nombre') || 'Mi Negocio';
+    const nombre = s.nombre || localStorage.getItem('nomi_user_nombre') || 'Usuario';
+    const tipo = s.tipo || 'otro';
+    const initial = nombre.charAt(0).toUpperCase();
+
+    const bizName = document.getElementById('sb-biz-name');
+    const bizIcon = document.getElementById('sb-biz-icon');
+    const bizType = document.getElementById('sb-biz-type');
+    const userName = document.getElementById('sb-user-name');
+    const userPlan = document.getElementById('sb-user-plan');
+    const avatarLetter = document.getElementById('sb-avatar-letter');
+
+    if (bizName) bizName.textContent = negocio;
+    if (bizIcon) bizIcon.textContent = TIPO_ICONS[tipo] || '🏪';
+    if (bizType) bizType.textContent = (TIPO_LABELS[tipo] || 'Negocio') + ' · Autónomo';
+    if (userName) userName.textContent = nombre;
+    if (userPlan) userPlan.textContent = 'Plan Básico · €9/mes';
+    if (avatarLetter) avatarLetter.textContent = initial;
+  } catch(e) {}
+}
+
+function doLogout() {
+  if (!confirm('¿Cerrar sesión?')) return;
+  localStorage.removeItem('nomi_session');
+  window.location.replace('login.html');
+}
+
 lazyInitCharts('inicio');
 renderAll();
+loadSession();
 initCookieBanner();
 </script>
 </body>
