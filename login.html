@@ -475,10 +475,74 @@ function togglePassword(inputId, btn) {
     : '<svg viewBox="0 0 16 16" fill="none"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5zM3 3l10 10" stroke="currentColor" stroke-width="1.3"/></svg>';
 }
 
-function doLogin() {
+// ── SECURITY: SHA-256 via Web Crypto API ──────────────────────────────────
+async function hashPass(p) {
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest('SHA-256', enc.encode(p));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ── RATE LIMITING ─────────────────────────────────────────────────────────
+const RATE_MAX = 5;
+const RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+function getRateKey(email) { return 'nomi_rate_' + email.toLowerCase(); }
+
+function checkRateLimit(email) {
+  const key = getRateKey(email);
+  const raw = localStorage.getItem(key);
+  if (!raw) return { blocked: false, remaining: RATE_MAX };
+  const data = JSON.parse(raw);
+  const now = Date.now();
+  if (now - data.firstAttempt > RATE_WINDOW_MS) {
+    localStorage.removeItem(key);
+    return { blocked: false, remaining: RATE_MAX };
+  }
+  if (data.count >= RATE_MAX) {
+    const waitMin = Math.ceil((RATE_WINDOW_MS - (now - data.firstAttempt)) / 60000);
+    return { blocked: true, waitMin };
+  }
+  return { blocked: false, remaining: RATE_MAX - data.count };
+}
+
+function recordFailedAttempt(email) {
+  const key = getRateKey(email);
+  const raw = localStorage.getItem(key);
+  const now = Date.now();
+  if (!raw) {
+    localStorage.setItem(key, JSON.stringify({ count: 1, firstAttempt: now }));
+  } else {
+    const data = JSON.parse(raw);
+    if (now - data.firstAttempt > RATE_WINDOW_MS) {
+      localStorage.setItem(key, JSON.stringify({ count: 1, firstAttempt: now }));
+    } else {
+      data.count++;
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+  }
+}
+
+function clearRateLimit(email) { localStorage.removeItem(getRateKey(email)); }
+
+// ── SESSION EXPIRY CHECK (7 days) ─────────────────────────────────────────
+(function checkSessionExpiry() {
+  const raw = localStorage.getItem('nomi_session');
+  if (!raw) return;
+  try {
+    const s = JSON.parse(raw);
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    if (!s.demo && s.ts && Date.now() - s.ts > sevenDays) {
+      localStorage.removeItem('nomi_session');
+    }
+  } catch(e) { localStorage.removeItem('nomi_session'); }
+})();
+
+// ── AUTH FUNCTIONS ────────────────────────────────────────────────────────
+async function doLogin() {
   clearErrors();
-  const email = document.getElementById('login-email').value.trim();
+  const emailRaw = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-pass').value;
+  const email = emailRaw.toLowerCase();
 
   let valid = true;
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -491,35 +555,48 @@ function doLogin() {
   }
   if (!valid) return;
 
-  // Check registered users
+  // Rate limit check
+  const rate = checkRateLimit(email);
+  if (rate.blocked) {
+    showGlobalError('Demasiados intentos fallidos. Espera ' + rate.waitMin + ' minuto(s) antes de volver a intentarlo.');
+    return;
+  }
+
   const users = JSON.parse(localStorage.getItem('nomi_users') || '[]');
-  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  const user = users.find(u => u.email.toLowerCase() === email);
 
   if (!user) {
     showGlobalError('No existe ninguna cuenta con ese email. ¿Quieres registrarte?');
     return;
   }
-  if (user.password !== hashPass(pass)) {
-    showFieldError('login-pass', 'login-pass-err');
-    document.getElementById('login-pass-err').textContent = 'Contraseña incorrecta';
+
+  const hashed = await hashPass(pass);
+  if (user.password !== hashed) {
+    recordFailedAttempt(email);
+    const rateAfter = checkRateLimit(email);
+    if (rateAfter.blocked) {
+      showGlobalError('Demasiados intentos. Cuenta bloqueada temporalmente durante 15 minutos.');
+    } else {
+      showFieldError('login-pass', 'login-pass-err');
+      document.getElementById('login-pass-err').textContent =
+        'Contraseña incorrecta' + (rateAfter.remaining <= 2 ? ' (' + rateAfter.remaining + ' intentos restantes)' : '');
+    }
     return;
   }
 
-  // Save session
+  clearRateLimit(email);
   const session = { email: user.email, nombre: user.nombre, negocio: user.negocio, tipo: user.tipo, ts: Date.now() };
   localStorage.setItem('nomi_session', JSON.stringify(session));
   localStorage.setItem('nomi_negocio_nombre', user.negocio || 'Mi Negocio');
   localStorage.setItem('nomi_user_nombre', user.nombre || '');
-
-  // Show success briefly and redirect
   showSuccess('Bienvenido de nuevo, ' + (user.nombre || 'amigo') + '!');
 }
 
-function doSignup() {
+async function doSignup() {
   clearErrors();
-  const nombre = document.getElementById('signup-nombre').value.trim();
-  const negocio = document.getElementById('signup-negocio').value.trim();
-  const email = document.getElementById('signup-email').value.trim();
+  const nombre = document.getElementById('signup-nombre').value.trim().slice(0, 80);
+  const negocio = document.getElementById('signup-negocio').value.trim().slice(0, 100);
+  const email = document.getElementById('signup-email').value.trim().toLowerCase();
   const pass = document.getElementById('signup-pass').value;
   const terms = document.getElementById('terms-check').checked;
 
@@ -540,37 +617,34 @@ function doSignup() {
   }
   if (!valid) return;
 
-  // Check duplicate
   const users = JSON.parse(localStorage.getItem('nomi_users') || '[]');
-  if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+  if (users.find(u => u.email.toLowerCase() === email)) {
     showFieldError('signup-email', 'signup-email-err');
     document.getElementById('signup-email-err').textContent = 'Ya existe una cuenta con ese email. Inicia sesión.';
     return;
   }
 
   const tipo = document.getElementById('signup-tipo').value;
+  const hashed = await hashPass(pass);
   const newUser = {
     email, nombre,
-    apellido: document.getElementById('signup-apellido').value.trim(),
+    apellido: document.getElementById('signup-apellido').value.trim().slice(0, 80),
     negocio, tipo,
-    password: hashPass(pass),
+    password: hashed,
     plan: plan || sessionStorage.getItem('nomi_plan') || 'basico',
     createdAt: new Date().toISOString()
   };
   users.push(newUser);
   localStorage.setItem('nomi_users', JSON.stringify(users));
 
-  // Save session
   const session = { email, nombre, negocio, tipo, ts: Date.now() };
   localStorage.setItem('nomi_session', JSON.stringify(session));
   localStorage.setItem('nomi_negocio_nombre', negocio);
   localStorage.setItem('nomi_user_nombre', nombre);
-
   showSuccess('¡Cuenta creada! Bienvenido a Nomi, ' + nombre + '.');
 }
 
 function doSocialLogin(provider) {
-  // Demo: simulate social login
   const session = {
     email: 'usuario@demo.com',
     nombre: 'Usuario Demo',
@@ -597,13 +671,6 @@ function showSuccess(msg) {
 function showForgot(e) {
   e.preventDefault();
   alert('Recuperación de contraseña: en breve recibirás un email (funcionalidad próximamente).');
-}
-
-// Simple hash (not for production — for demo purposes)
-function hashPass(p) {
-  let h = 0;
-  for (let i = 0; i < p.length; i++) { h = Math.imul(31, h) + p.charCodeAt(i) | 0; }
-  return h.toString(36);
 }
 
 // Enter key support

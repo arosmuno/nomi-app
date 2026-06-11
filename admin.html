@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nomi Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232563eb'/><text y='23' x='5' font-size='20' font-family='system-ui,sans-serif' font-weight='700' fill='white'>N</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f5f4;
+  --surface: #ffffff;
+  --border: #e7e5e4;
+  --text: #1c1917;
+  --muted: #78716c;
+  --blue: #2563eb;
+  --blue-d: #1d4ed8;
+  --blue-s: #eff6ff;
+  --green: #16a34a;
+  --green-s: #f0fdf4;
+  --red: #dc2626;
+  --red-s: #fef2f2;
+  --yellow: #d97706;
+  --yellow-s: #fffbeb;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.10);
+}
+html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+/* ── GATE SCREEN ── */
+#gate-screen {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+}
+.gate-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 48px 40px;
+  width: 100%; max-width: 400px;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+.gate-icon {
+  width: 56px; height: 56px;
+  background: var(--blue-s);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 24px;
+}
+.gate-card h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.gate-card p { color: var(--muted); margin-bottom: 28px; font-size: 13px; }
+.gate-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 15px; font-family: inherit;
+  outline: none; transition: border-color .15s;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+.gate-input:focus { border-color: var(--blue); }
+.gate-input.error { border-color: var(--red); }
+.gate-btn {
+  width: 100%; padding: 11px;
+  background: var(--blue); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: background .15s;
+}
+.gate-btn:hover { background: var(--blue-d); }
+.gate-error { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
+.gate-error.show { display: block; }
+
+/* ── ADMIN LAYOUT ── */
+#admin-screen { display: none; min-height: 100vh; }
+.admin-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 10;
+}
+.admin-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
+.admin-logo-badge {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #fff; padding: 4px 8px; border-radius: 6px;
+  font-size: 11px; font-weight: 600; letter-spacing: .5px;
+}
+.admin-header-right { display: flex; align-items: center; gap: 12px; }
+.admin-ts { font-size: 12px; color: var(--muted); }
+.logout-btn {
+  padding: 6px 14px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg);
+  font-size: 13px; cursor: pointer; color: var(--text);
+  transition: background .15s;
+}
+.logout-btn:hover { background: var(--border); }
+
+.admin-body { padding: 32px; max-width: 1200px; margin: 0 auto; }
+
+/* ── STATS ── */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px; margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.stat-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.stat-value { font-size: 32px; font-weight: 700; line-height: 1; }
+.stat-value.green { color: var(--green); }
+.stat-value.blue { color: var(--blue); }
+.stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+/* ── TABLE SECTION ── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title { font-size: 16px; font-weight: 600; }
+.section-actions { display: flex; gap: 8px; }
+.btn-sm {
+  padding: 6px 14px; border-radius: 8px; font-size: 13px;
+  font-weight: 500; cursor: pointer; border: 1.5px solid var(--border);
+  background: var(--surface); color: var(--text); transition: .15s;
+}
+.btn-sm:hover { background: var(--bg); }
+.btn-sm.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn-sm.primary:hover { background: var(--blue-d); border-color: var(--blue-d); }
+.btn-sm.danger { border-color: var(--red); color: var(--red); }
+.btn-sm.danger:hover { background: var(--red-s); }
+
+.search-bar {
+  width: 100%; max-width: 320px; padding: 8px 12px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 13px; font-family: inherit; outline: none;
+  margin-bottom: 14px;
+}
+.search-bar:focus { border-color: var(--blue); }
+
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--bg); }
+th {
+  padding: 10px 16px; text-align: left;
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .5px;
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg); }
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+}
+.badge-gratis { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+.badge-basico { background: var(--blue-s); color: var(--blue); }
+.badge-pro { background: #f3e8ff; color: #7c3aed; }
+.badge-demo { background: var(--yellow-s); color: var(--yellow); }
+.empty-state {
+  padding: 48px; text-align: center; color: var(--muted);
+}
+.empty-icon { font-size: 32px; margin-bottom: 8px; }
+.delete-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); padding: 4px 6px; border-radius: 6px;
+  transition: .15s; font-size: 13px;
+}
+.delete-btn:hover { color: var(--red); background: var(--red-s); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.4);
+  display: none; align-items: center; justify-content: center; z-index: 100;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--surface); border-radius: 14px; padding: 28px;
+  width: 100%; max-width: 400px; box-shadow: var(--shadow-lg);
+}
+.modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.modal p { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+@media (max-width: 640px) {
+  .admin-body { padding: 16px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  table { font-size: 12px; }
+  th, td { padding: 10px 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── GATE ── -->
+<div id="gate-screen">
+  <div class="gate-card">
+    <div class="gate-icon">🔐</div>
+    <h1>Nomi Admin</h1>
+    <p>Acceso restringido. Introduce la contraseña maestra.</p>
+    <input type="password" id="gate-pass" class="gate-input" placeholder="Contraseña maestra" autocomplete="current-password">
+    <button class="gate-btn" onclick="verifyGate()">Entrar</button>
+    <p class="gate-error" id="gate-error">Contraseña incorrecta.</p>
+  </div>
+</div>
+
+<!-- ── ADMIN PANEL ── -->
+<div id="admin-screen">
+  <header class="admin-header">
+    <div class="admin-logo">
+      <span>Nomi</span>
+      <span class="admin-logo-badge">ADMIN</span>
+    </div>
+    <div class="admin-header-right">
+      <span class="admin-ts" id="admin-ts"></span>
+      <button class="logout-btn" onclick="adminLogout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <div class="admin-body">
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total usuarios</div>
+        <div class="stat-value blue" id="stat-total">0</div>
+        <div class="stat-sub">Registrados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Activos 7 días</div>
+        <div class="stat-value green" id="stat-active7">0</div>
+        <div class="stat-sub">Con sesión activa</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Plan Básico</div>
+        <div class="stat-value" id="stat-basico">0</div>
+        <div class="stat-sub">€25/mes · usuarios</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Plan Pro</div>
+        <div class="stat-value" id="stat-pro">0</div>
+        <div class="stat-sub">€40/mes · usuarios</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Plan Gratis</div>
+        <div class="stat-value" id="stat-gratis">0</div>
+        <div class="stat-sub">Cuentas freemium</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">MRR estimado</div>
+        <div class="stat-value" id="stat-mrr">€0</div>
+        <div class="stat-sub">Básico + Pro</div>
+      </div>
+    </div>
+
+    <!-- Users table -->
+    <div class="section-header">
+      <div class="section-title">Usuarios registrados</div>
+      <div class="section-actions">
+        <button class="btn-sm" onclick="exportCSV()">⬇ Exportar CSV</button>
+        <button class="btn-sm primary" onclick="refreshData()">↻ Actualizar</button>
+      </div>
+    </div>
+
+    <input type="search" class="search-bar" id="search-input" placeholder="Buscar por email, nombre o negocio..." oninput="renderTable()">
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Email</th>
+            <th>Nombre</th>
+            <th>Negocio</th>
+            <th>Tipo</th>
+            <th>Plan</th>
+            <th>Registro</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <h3>¿Eliminar usuario?</h3>
+    <p id="delete-modal-text">Esta acción no se puede deshacer. El usuario perderá el acceso.</p>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="closeDeleteModal()">Cancelar</button>
+      <button class="btn-sm danger" onclick="confirmDelete()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+// Admin password hash (SHA-256 of the master password)
+// Default master password: "NomiAdmin2024!" — CHANGE THIS before deploying
+// To change: compute SHA-256("yourNewPassword") and paste below
+const ADMIN_HASH = 'a4b3c6f1f16a5e6e5e9b7b3e8e8d4c3a5b6f2e1d3a4b5c6d7e8f9a0b1c2d3e4'; // placeholder — set on first run
+const ADMIN_SESSION_KEY = 'nomi_admin_session';
+const ADMIN_SESSION_TTL = 4 * 60 * 60 * 1000; // 4 hours
+
+let pendingDeleteEmail = null;
+let allUsers = [];
+
+// ── GATE ────────────────────────────────────────────────────────────────────
+async function sha256(str) {
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest('SHA-256', enc.encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// Check existing admin session
+(function checkAdminSession() {
+  const raw = localStorage.getItem(ADMIN_SESSION_KEY);
+  if (!raw) return;
+  try {
+    const s = JSON.parse(raw);
+    if (s.ts && Date.now() - s.ts < ADMIN_SESSION_TTL) {
+      showAdmin();
+    } else {
+      localStorage.removeItem(ADMIN_SESSION_KEY);
+    }
+  } catch(e) { localStorage.removeItem(ADMIN_SESSION_KEY); }
+})();
+
+document.getElementById('gate-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') verifyGate();
+});
+
+async function verifyGate() {
+  const pass = document.getElementById('gate-pass').value;
+  const errEl = document.getElementById('gate-error');
+  const inp = document.getElementById('gate-pass');
+  errEl.classList.remove('show');
+  inp.classList.remove('error');
+
+  if (!pass) { inp.classList.add('error'); return; }
+
+  const hashed = await sha256(pass);
+
+  // First-run: if ADMIN_HASH is placeholder, allow setting a new password
+  if (ADMIN_HASH === 'a4b3c6f1f16a5e6e5e9b7b3e8e8d4c3a5b6f2e1d3a4b5c6d7e8f9a0b1c2d3e4') {
+    // Check against stored hash, or store it on first use
+    const stored = localStorage.getItem('nomi_admin_hash');
+    if (!stored) {
+      if (pass.length < 8) {
+        errEl.textContent = 'La contraseña debe tener al menos 8 caracteres.';
+        errEl.classList.add('show');
+        return;
+      }
+      localStorage.setItem('nomi_admin_hash', hashed);
+      grantAdminSession();
+      return;
+    }
+    if (hashed !== stored) {
+      inp.classList.add('error');
+      errEl.textContent = 'Contraseña incorrecta.';
+      errEl.classList.add('show');
+      return;
+    }
+    grantAdminSession();
+    return;
+  }
+
+  // Check against hardcoded hash
+  if (hashed !== ADMIN_HASH) {
+    inp.classList.add('error');
+    errEl.textContent = 'Contraseña incorrecta.';
+    errEl.classList.add('show');
+    return;
+  }
+  grantAdminSession();
+}
+
+function grantAdminSession() {
+  localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ ts: Date.now() }));
+  showAdmin();
+}
+
+function showAdmin() {
+  document.getElementById('gate-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display = 'block';
+  document.getElementById('admin-ts').textContent = 'Última actualización: ' + new Date().toLocaleTimeString('es-ES');
+  refreshData();
+}
+
+function adminLogout() {
+  localStorage.removeItem(ADMIN_SESSION_KEY);
+  location.reload();
+}
+
+// ── DATA ────────────────────────────────────────────────────────────────────
+function refreshData() {
+  allUsers = JSON.parse(localStorage.getItem('nomi_users') || '[]');
+  computeStats();
+  renderTable();
+  document.getElementById('admin-ts').textContent = 'Última actualización: ' + new Date().toLocaleTimeString('es-ES');
+}
+
+function computeStats() {
+  const now = Date.now();
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+
+  // Active 7d: check nomi_session if it matches a registered user
+  const sessionRaw = localStorage.getItem('nomi_session');
+  let activeCount = 0;
+  if (sessionRaw) {
+    try {
+      const s = JSON.parse(sessionRaw);
+      if (!s.demo && s.ts && now - s.ts < sevenDays) activeCount = 1;
+    } catch(e) {}
+  }
+
+  const total = allUsers.length;
+  const gratis = allUsers.filter(u => !u.plan || u.plan === 'gratis').length;
+  const basico = allUsers.filter(u => u.plan === 'basico').length;
+  const pro = allUsers.filter(u => u.plan === 'pro').length;
+  const mrr = basico * 25 + pro * 40;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-active7').textContent = activeCount;
+  document.getElementById('stat-gratis').textContent = gratis;
+  document.getElementById('stat-basico').textContent = basico;
+  document.getElementById('stat-pro').textContent = pro;
+  document.getElementById('stat-mrr').textContent = '€' + mrr;
+}
+
+function renderTable() {
+  const q = (document.getElementById('search-input').value || '').toLowerCase();
+  const filtered = q
+    ? allUsers.filter(u =>
+        (u.email||'').toLowerCase().includes(q) ||
+        (u.nombre||'').toLowerCase().includes(q) ||
+        (u.negocio||'').toLowerCase().includes(q))
+    : allUsers;
+
+  const tbody = document.getElementById('users-tbody');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">👥</div>No hay usuarios registrados en este dispositivo.</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((u, i) => {
+    const plan = u.plan || 'gratis';
+    const badgeClass = plan === 'pro' ? 'badge-pro' : plan === 'basico' ? 'badge-basico' : 'badge-gratis';
+    const date = u.createdAt ? new Date(u.createdAt).toLocaleDateString('es-ES') : '—';
+    const tipo = (u.tipo || '').replace(/_/g, ' ');
+    return `<tr>
+      <td style="color:var(--muted)">${i + 1}</td>
+      <td><strong>${escHtml(u.email || '')}</strong></td>
+      <td>${escHtml((u.nombre || '') + (u.apellido ? ' ' + u.apellido : ''))}</td>
+      <td>${escHtml(u.negocio || '—')}</td>
+      <td style="color:var(--muted)">${escHtml(tipo || '—')}</td>
+      <td><span class="badge ${badgeClass}">${plan}</span></td>
+      <td style="color:var(--muted)">${date}</td>
+      <td><button class="delete-btn" onclick="openDeleteModal('${escHtml(u.email || '')}', '${escHtml(u.nombre || '')}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── DELETE ───────────────────────────────────────────────────────────────────
+function openDeleteModal(email, nombre) {
+  pendingDeleteEmail = email;
+  document.getElementById('delete-modal-text').textContent =
+    'Se eliminará la cuenta de ' + nombre + ' (' + email + '). Esta acción no se puede deshacer.';
+  document.getElementById('delete-modal').classList.add('show');
+}
+
+function closeDeleteModal() {
+  pendingDeleteEmail = null;
+  document.getElementById('delete-modal').classList.remove('show');
+}
+
+function confirmDelete() {
+  if (!pendingDeleteEmail) { closeDeleteModal(); return; }
+  allUsers = allUsers.filter(u => u.email !== pendingDeleteEmail);
+  localStorage.setItem('nomi_users', JSON.stringify(allUsers));
+  closeDeleteModal();
+  computeStats();
+  renderTable();
+}
+
+document.getElementById('delete-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeDeleteModal();
+});
+
+// ── EXPORT CSV ────────────────────────────────────────────────────────────────
+function exportCSV() {
+  if (allUsers.length === 0) { alert('No hay usuarios que exportar.'); return; }
+  const headers = ['Email','Nombre','Apellido','Negocio','Tipo','Plan','Fecha registro'];
+  const rows = allUsers.map(u => [
+    u.email||'', u.nombre||'', u.apellido||'', u.negocio||'',
+    u.tipo||'', u.plan||'gratis', u.createdAt ? new Date(u.createdAt).toLocaleDateString('es-ES') : ''
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'nomi-usuarios-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
