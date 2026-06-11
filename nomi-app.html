@@ -687,7 +687,7 @@ select.form-input { cursor: pointer; }
     <div class="sb-avatar" id="sb-avatar-letter">M</div>
     <div style="flex:1;min-width:0">
       <div class="sb-user-name" id="sb-user-name">Miguel Martínez</div>
-      <div class="sb-user-plan" id="sb-user-plan">Plan Básico · €9/mes</div>
+      <div class="sb-user-plan" id="sb-user-plan">Plan Básico · €25/mes</div>
     </div>
     <button onclick="event.stopPropagation();doLogout()" title="Cerrar sesión" style="background:none;border:none;cursor:pointer;color:var(--muted2);padding:4px;display:flex;align-items:center">
       <svg viewBox="0 0 16 16" fill="none" width="15" height="15"><path d="M6 3H3a1 1 0 00-1 1v8a1 1 0 001 1h3M10 11l3-3-3-3M13 8H6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1580,7 +1580,7 @@ select.form-input { cursor: pointer; }
 
       <div class="settings-card">
         <div class="card-header"><span class="card-title" data-es="Plan y facturación" data-en="Plan & billing">Plan y facturación</span></div>
-        <div class="settings-row"><div class="settings-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M3 9l3-3 3 3 4-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="settings-info"><div class="settings-label" data-es="Plan Básico — €9/mes" data-en="Basic Plan — €9/mo">Plan Básico — €9/mes</div><div class="settings-desc" data-es="Facturas ilimitadas, IVA automático, 1 banco conectado" data-en="Unlimited invoices, automatic VAT, 1 bank connected">Facturas ilimitadas, IVA automático, 1 banco conectado</div></div><button class="btn btn-primary" style="font-size:12px;padding:5px 12px" data-es="Subir a Pro €19/mes" data-en="Upgrade to Pro €19/mo">Subir a Pro €19/mes</button></div>
+        <div class="settings-row"><div class="settings-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M3 9l3-3 3 3 4-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="settings-info"><div class="settings-label" data-es="Plan Básico — €25/mes" data-en="Basic Plan — €25/mo">Plan Básico — €25/mes</div><div class="settings-desc" data-es="Facturas ilimitadas, IVA automático, 1 banco conectado" data-en="Unlimited invoices, automatic VAT, 1 bank connected">Facturas ilimitadas, IVA automático, 1 banco conectado</div></div><button class="btn btn-primary" style="font-size:12px;padding:5px 12px" data-es="Subir a Pro €40/mes" data-en="Upgrade to Pro €40/mo">Subir a Pro €40/mes</button></div>
       </div>
 
       <div class="settings-card">
@@ -1838,7 +1838,7 @@ select.form-input { cursor: pointer; }
             <div class="ef-row"><span class="ef-label indent" data-es="Suministros (luz, agua)" data-en="Utilities (electricity, water)">Suministros (luz, agua)</span><span class="ef-amount negative">−€148,00</span></div>
             <div class="ef-row"><span class="ef-label indent" data-es="Transporte / gasolina" data-en="Transport / fuel">Transporte / gasolina</span><span class="ef-amount negative">−€120,00</span></div>
             <div class="ef-row"><span class="ef-label indent" data-es="Material embalaje" data-en="Packaging material">Material embalaje</span><span class="ef-amount negative">−€87,00</span></div>
-            <div class="ef-row"><span class="ef-label indent">Nomi (software)</span><span class="ef-amount negative">−€9,00</span></div>
+            <div class="ef-row"><span class="ef-label indent">Nomi (software)</span><span class="ef-amount negative">−€25,00</span></div>
             <div class="ef-row"><span class="ef-label indent" data-es="Otros gastos" data-en="Other expenses">Otros gastos</span><span class="ef-amount negative">−€156,00</span></div>
             <div class="ef-row subtotal"><span class="ef-label" data-es="Total gastos operativos" data-en="Total operating expenses">Total gastos operativos</span><span class="ef-amount" id="pyl-opex">−€1.220,00</span></div>
           </div>
@@ -2744,7 +2744,7 @@ function loadSession() {
     if (bizIcon) bizIcon.textContent = TIPO_ICONS[tipo] || '🏪';
     if (bizType) bizType.textContent = (TIPO_LABELS[tipo] || 'Negocio') + ' · Autónomo';
     if (userName) userName.textContent = nombre;
-    if (userPlan) userPlan.textContent = 'Plan Básico · €9/mes';
+    if (userPlan) userPlan.textContent = 'Plan Básico · €25/mes';
     if (avatarLetter) avatarLetter.textContent = initial;
   } catch(e) {}
 }
