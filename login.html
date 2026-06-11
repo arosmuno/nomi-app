@@ -7,6 +7,14 @@
 <meta name="description" content="Accede a tu cuenta de Nomi o crea una gratis. Gestiona tu negocio en minutos.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232563eb'/><text y='23' x='5' font-size='20' font-family='system-ui,sans-serif' font-weight='700' fill='white'>N</text></svg>">
+<!-- Google Analytics — sustituye G-XXXXXXXXXX por tu Measurement ID real -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -374,6 +382,25 @@ body {
       <p>Bienvenido a Nomi. Redirigiendo a tu dashboard...</p>
     </div>
 
+    <!-- ── RESET PASSWORD SCREEN ── -->
+    <div id="screen-reset" class="success-screen">
+      <div class="success-icon" style="background:#fffbeb;border-color:rgba(217,119,6,.2);font-size:22px">🔑</div>
+      <h2 style="font-size:20px">Actualiza tu contraseña</h2>
+      <p style="margin-bottom:20px">Por seguridad hemos mejorado el cifrado. Introduce tu contraseña actual para continuar.</p>
+      <div class="form-group" style="text-align:left">
+        <label class="form-label" for="reset-pass-old">Contraseña actual</label>
+        <input class="form-input" id="reset-pass-old" type="password" placeholder="Tu contraseña actual">
+        <div class="form-error" id="reset-pass-old-err">Contraseña incorrecta</div>
+      </div>
+      <div class="form-group" style="text-align:left">
+        <label class="form-label" for="reset-pass-new">Nueva contraseña</label>
+        <input class="form-input" id="reset-pass-new" type="password" placeholder="Mínimo 6 caracteres">
+        <div class="form-error" id="reset-pass-new-err">Mínimo 6 caracteres</div>
+      </div>
+      <button class="btn-submit" onclick="doMigratePassword()" style="margin-top:8px">Actualizar y entrar</button>
+      <div class="global-error" id="reset-global-err" style="margin-top:12px"></div>
+    </div>
+
   </div>
 </div>
 
@@ -482,6 +509,19 @@ async function hashPass(p) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Old Math.imul hash — only used for migration detection
+function hashPassLegacy(p) {
+  let h = 0;
+  for (let i = 0; i < p.length; i++) { h = Math.imul(31, h) + p.charCodeAt(i) | 0; }
+  return h.toString(36);
+}
+
+// A SHA-256 hex hash is always exactly 64 chars; legacy hashes are short base-36
+function isLegacyHash(hash) { return typeof hash === 'string' && hash.length < 20; }
+
+// State for migration flow
+let _migrateEmail = null;
+
 // ── RATE LIMITING ─────────────────────────────────────────────────────────
 const RATE_MAX = 5;
 const RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
@@ -570,6 +610,31 @@ async function doLogin() {
     return;
   }
 
+  // ── Legacy hash migration ──
+  if (isLegacyHash(user.password)) {
+    if (hashPassLegacy(pass) !== user.password) {
+      recordFailedAttempt(email);
+      const rateAfter = checkRateLimit(email);
+      if (rateAfter.blocked) {
+        showGlobalError('Demasiados intentos. Cuenta bloqueada temporalmente durante 15 minutos.');
+      } else {
+        showFieldError('login-pass', 'login-pass-err');
+        document.getElementById('login-pass-err').textContent =
+          'Contraseña incorrecta' + (rateAfter.remaining <= 2 ? ' (' + rateAfter.remaining + ' intentos restantes)' : '');
+      }
+      return;
+    }
+    // Old hash matches — show migration screen
+    clearRateLimit(email);
+    _migrateEmail = email;
+    document.getElementById('form-login').style.display = 'none';
+    document.getElementById('form-signup').style.display = 'none';
+    const sr = document.getElementById('screen-reset');
+    sr.classList.add('show');
+    document.getElementById('reset-pass-old').value = pass; // pre-fill so user only sets new one
+    return;
+  }
+
   const hashed = await hashPass(pass);
   if (user.password !== hashed) {
     recordFailedAttempt(email);
@@ -585,6 +650,7 @@ async function doLogin() {
   }
 
   clearRateLimit(email);
+  if (typeof gtag !== 'undefined') gtag('event', 'login', { method: 'email' });
   const session = { email: user.email, nombre: user.nombre, negocio: user.negocio, tipo: user.tipo, ts: Date.now() };
   localStorage.setItem('nomi_session', JSON.stringify(session));
   localStorage.setItem('nomi_negocio_nombre', user.negocio || 'Mi Negocio');
@@ -641,6 +707,7 @@ async function doSignup() {
   localStorage.setItem('nomi_session', JSON.stringify(session));
   localStorage.setItem('nomi_negocio_nombre', negocio);
   localStorage.setItem('nomi_user_nombre', nombre);
+  if (typeof gtag !== 'undefined') gtag('event', 'sign_up', { method: 'email', plan: newUser.plan });
   showSuccess('¡Cuenta creada! Bienvenido a Nomi, ' + nombre + '.');
 }
 
@@ -671,6 +738,53 @@ function showSuccess(msg) {
 function showForgot(e) {
   e.preventDefault();
   alert('Recuperación de contraseña: en breve recibirás un email (funcionalidad próximamente).');
+}
+
+// ── PASSWORD MIGRATION ────────────────────────────────────────────────────
+async function doMigratePassword() {
+  const errEl = document.getElementById('reset-global-err');
+  errEl.classList.remove('show');
+  document.getElementById('reset-pass-old-err').classList.remove('show');
+  document.getElementById('reset-pass-old').classList.remove('error');
+  document.getElementById('reset-pass-new-err').classList.remove('show');
+  document.getElementById('reset-pass-new').classList.remove('error');
+
+  const oldPass = document.getElementById('reset-pass-old').value;
+  const newPass = document.getElementById('reset-pass-new').value;
+
+  if (!newPass || newPass.length < 6) {
+    document.getElementById('reset-pass-new').classList.add('error');
+    document.getElementById('reset-pass-new-err').classList.add('show');
+    return;
+  }
+
+  const users = JSON.parse(localStorage.getItem('nomi_users') || '[]');
+  const idx = users.findIndex(u => u.email.toLowerCase() === _migrateEmail);
+  if (idx === -1) {
+    errEl.textContent = 'Error: usuario no encontrado.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  // Verify old pass one more time
+  if (hashPassLegacy(oldPass) !== users[idx].password) {
+    document.getElementById('reset-pass-old').classList.add('error');
+    document.getElementById('reset-pass-old-err').classList.add('show');
+    return;
+  }
+
+  // Upgrade to SHA-256
+  users[idx].password = await hashPass(newPass);
+  localStorage.setItem('nomi_users', JSON.stringify(users));
+
+  const user = users[idx];
+  const session = { email: user.email, nombre: user.nombre, negocio: user.negocio, tipo: user.tipo, ts: Date.now() };
+  localStorage.setItem('nomi_session', JSON.stringify(session));
+  localStorage.setItem('nomi_negocio_nombre', user.negocio || 'Mi Negocio');
+  localStorage.setItem('nomi_user_nombre', user.nombre || '');
+
+  document.getElementById('screen-reset').classList.remove('show');
+  showSuccess('¡Contraseña actualizada! Bienvenido de nuevo, ' + (user.nombre || 'amigo') + '.');
 }
 
 // Enter key support

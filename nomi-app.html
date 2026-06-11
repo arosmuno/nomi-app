@@ -23,6 +23,14 @@
   } catch(e) { window.location.replace('login.html'); }
 })();
 </script>
+<!-- Google Analytics — sustituye G-XXXXXXXXXX por tu Measurement ID real -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -683,6 +691,12 @@ select.form-input { cursor: pointer; }
       <svg viewBox="0 0 16 16" fill="none"><path d="M5 8h6M5 8a2 2 0 100-4 2 2 0 000 4zm6 0a2 2 0 100 4 2 2 0 000-4z" stroke="currentColor" stroke-width="1.3"/></svg>
       <span data-es="Integraciones" data-en="Integrations">Integraciones</span>
       <span class="sb-badge green">4</span>
+    </div>
+
+    <!-- Upgrade CTA — solo visible para plan gratis -->
+    <div id="sb-upgrade-cta" style="display:none;margin:8px 12px 4px;background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(37,99,235,.04));border:1.5px solid rgba(37,99,235,.2);border-radius:10px;padding:10px 12px;cursor:pointer" onclick="showPage('upgrade',this)">
+      <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:3px">⚡ Actualiza tu plan</div>
+      <div style="font-size:11px;color:var(--muted)">Desbloquea facturas ilimitadas y más</div>
     </div>
 
     <div class="sb-section" data-es="Cuenta" data-en="Account">Cuenta</div>
@@ -1970,6 +1984,92 @@ select.form-input { cursor: pointer; }
       </div>
     </div><!-- /estados -->
 
+    <!-- ── UPGRADE PAGE ── -->
+    <div class="page" id="page-upgrade">
+      <div class="page-header"><h1 class="page-title">Actualizar plan</h1></div>
+      <div style="max-width:860px;margin:0 auto">
+
+        <!-- Current plan banner -->
+        <div id="upgrade-current-banner" style="background:var(--blue-s);border:1.5px solid rgba(37,99,235,.15);border-radius:12px;padding:16px 20px;margin-bottom:28px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px">✅</span>
+          <div>
+            <div style="font-weight:600;font-size:14px" id="upgrade-current-label">Estás en el Plan Gratis</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Actualiza para desbloquear todo el potencial de Nomi</div>
+          </div>
+        </div>
+
+        <!-- Plan cards -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:32px">
+
+          <!-- Gratis -->
+          <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:24px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px">Gratis</div>
+            <div style="font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:2px">€0</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:16px">para siempre</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">Para empezar y explorar Nomi.</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;font-size:13px">
+              <div>✓ Hasta 30 ventas/mes</div>
+              <div>✓ 5 facturas/mes</div>
+              <div>✓ Inventario básico</div>
+              <div style="color:var(--muted2)">✕ IVA y Hacienda</div>
+              <div style="color:var(--muted2)">✕ Empleados</div>
+            </div>
+            <div id="upgrade-btn-gratis" style="width:100%;padding:9px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);text-align:center;font-size:13px;font-weight:600;color:var(--muted);cursor:default">Plan actual</div>
+          </div>
+
+          <!-- Básico — highlighted -->
+          <div style="background:var(--surface);border:2px solid var(--blue);border-radius:14px;padding:24px;position:relative">
+            <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px;white-space:nowrap">MÁS POPULAR</div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--blue);margin-bottom:8px">Básico</div>
+            <div style="font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:2px">€25</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:16px">/mes · IVA incluido</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">Para el negocio que ya funciona.</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;font-size:13px">
+              <div>✓ Ventas ilimitadas</div>
+              <div>✓ Facturas ilimitadas</div>
+              <div>✓ Inventario completo</div>
+              <div>✓ IVA y Hacienda</div>
+              <div>✓ 1 empleado</div>
+              <div style="color:var(--muted2)">✕ Multi-empleado</div>
+            </div>
+            <button id="upgrade-btn-basico" onclick="selectUpgradePlan('basico')" style="width:100%;padding:10px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:700;cursor:pointer">Actualizar a Básico</button>
+          </div>
+
+          <!-- Pro -->
+          <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:24px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#7c3aed;margin-bottom:8px">Pro</div>
+            <div style="font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:2px">€40</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:16px">/mes · IVA incluido</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">Para negocios con equipo.</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;font-size:13px">
+              <div>✓ Todo lo de Básico</div>
+              <div>✓ Empleados ilimitados</div>
+              <div>✓ Estados financieros</div>
+              <div>✓ Multi-cuenta</div>
+              <div>✓ Soporte prioritario</div>
+              <div>✓ Exportación contable</div>
+            </div>
+            <button id="upgrade-btn-pro" onclick="selectUpgradePlan('pro')" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid #7c3aed;background:#fff;color:#7c3aed;font-size:13px;font-weight:700;cursor:pointer">Actualizar a Pro</button>
+          </div>
+        </div>
+
+        <!-- Stripe coming soon notice -->
+        <div id="upgrade-stripe-notice" style="display:none;background:#f0fdf4;border:1.5px solid rgba(22,163,74,.2);border-radius:12px;padding:20px 24px;text-align:center">
+          <div style="font-size:24px;margin-bottom:8px">🚀</div>
+          <div style="font-weight:700;margin-bottom:4px">¡Pago online muy pronto!</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Estamos activando la pasarela de pago. Te avisaremos en cuanto esté lista.<br>Mientras tanto, contacta con nosotros para activar tu plan manualmente.</div>
+          <a href="mailto:hola@getnomi.es?subject=Quiero%20activar%20el%20plan%20<span id=upgrade-plan-name>Básico</span>&body=Hola%2C%20me%20interesa%20activar%20el%20plan%20de%20pago%20de%20Nomi." id="upgrade-email-link"
+             style="display:inline-block;padding:10px 24px;background:var(--green);color:#fff;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none">
+            Contactar para activar plan
+          </a>
+        </div>
+
+        <div style="margin-top:24px;text-align:center;font-size:12px;color:var(--muted)">
+          🔒 Pago seguro · Cancela cuando quieras · Sin permanencia
+        </div>
+      </div>
+    </div><!-- /upgrade -->
+
   </div><!-- /content -->
 </div><!-- /main -->
 
@@ -2013,7 +2113,8 @@ const pageTitles = {
   financiacion: { es:'Financiación', en:'Financing' },
   empleados:    { es:'Empleados', en:'Employees' },
   conexiones:   { es:'Integraciones', en:'Integrations' },
-  ajustes:      { es:'Ajustes', en:'Settings' }
+  ajustes:      { es:'Ajustes', en:'Settings' },
+  upgrade:      { es:'Actualizar plan', en:'Upgrade plan' }
 };
 
 function showPage(id, el) {
@@ -2025,6 +2126,23 @@ function showPage(id, el) {
   if (titles) document.getElementById('topbar-title').textContent = titles[currentLang];
   lazyInitCharts(id);
   if (id === 'ajustes') setTimeout(loadAjustesForm, 0);
+  if (id === 'upgrade') setTimeout(loadSession, 0); // refresh plan state
+}
+
+// ── UPGRADE ─────────────────────────────────────────────
+function selectUpgradePlan(plan) {
+  const notice = document.getElementById('upgrade-stripe-notice');
+  const emailLink = document.getElementById('upgrade-email-link');
+  const planNameSpan = document.getElementById('upgrade-plan-name');
+  const planNames = { basico: 'Básico', pro: 'Pro' };
+  const planName = planNames[plan] || plan;
+
+  if (planNameSpan) planNameSpan.textContent = planName;
+  if (emailLink) {
+    emailLink.href = 'mailto:hola@getnomi.es?subject=Quiero%20activar%20el%20plan%20' + encodeURIComponent(planName) + '&body=Hola%2C%20me%20interesa%20activar%20el%20plan%20' + encodeURIComponent(planName) + '%20de%20Nomi.%20Mi%20email%20es%3A%20';
+  }
+  if (notice) notice.style.display = 'block';
+  notice.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // ── CHARTS ─────────────────────────────────────────────
@@ -2749,12 +2867,39 @@ function loadSession() {
     const userPlan = document.getElementById('sb-user-plan');
     const avatarLetter = document.getElementById('sb-avatar-letter');
 
+    const plan = s.plan || 'gratis';
+    const PLAN_LABELS = { gratis: 'Plan Gratis · Gratis', basico: 'Plan Básico · €25/mes', pro: 'Plan Pro · €40/mes' };
+
     if (bizName) bizName.textContent = negocio;
     if (bizIcon) bizIcon.textContent = TIPO_ICONS[tipo] || '🏪';
     if (bizType) bizType.textContent = (TIPO_LABELS[tipo] || 'Negocio') + ' · Autónomo';
     if (userName) userName.textContent = nombre;
-    if (userPlan) userPlan.textContent = 'Plan Básico · €25/mes';
+    if (userPlan) userPlan.textContent = PLAN_LABELS[plan] || 'Plan Gratis';
     if (avatarLetter) avatarLetter.textContent = initial;
+
+    // Show upgrade CTA in sidebar for free users
+    const upgradeCta = document.getElementById('sb-upgrade-cta');
+    if (upgradeCta) upgradeCta.style.display = (plan === 'gratis') ? 'block' : 'none';
+
+    // Update upgrade page current plan banner
+    const bannerLabel = document.getElementById('upgrade-current-label');
+    if (bannerLabel) {
+      const planNames = { gratis: 'Plan Gratis', basico: 'Plan Básico', pro: 'Plan Pro' };
+      bannerLabel.textContent = 'Estás en el ' + (planNames[plan] || 'Plan Gratis');
+    }
+    // Hide the card button that corresponds to current plan
+    ['gratis','basico','pro'].forEach(p => {
+      const btn = document.getElementById('upgrade-btn-' + p);
+      if (!btn) return;
+      if (p === plan) {
+        btn.textContent = 'Plan actual';
+        btn.style.background = 'var(--bg)';
+        btn.style.color = 'var(--muted)';
+        btn.style.border = '1.5px solid var(--border)';
+        btn.style.cursor = 'default';
+        btn.disabled = true;
+      }
+    });
   } catch(e) {}
 }
 

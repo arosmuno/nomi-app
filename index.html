@@ -21,6 +21,17 @@
 <meta name="twitter:image" content="https://getnomi.es/og-image.png">
 <!-- Favicon inline SVG -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232563eb'/><text y='23' x='5' font-size='20' font-family='system-ui,sans-serif' font-weight='700' fill='white'>N</text></svg>">
+<!-- Google Analytics — sustituye G-XXXXXXXXXX por tu Measurement ID real en https://analytics.google.com -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
+  // Eventos clave:
+  // gtag('event','demo_start') → cuando alguien pulsa "Ver demo"
+  // gtag('event','plan_click', {plan:'basico'}) → CTA de precio
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -717,7 +728,7 @@ footer {
         <div class="plan-feature muted">Modelos Hacienda</div>
         <div class="plan-feature muted">Empleados</div>
       </div>
-      <a href="login.html?mode=signup&plan=gratis" class="btn btn-outline plan-cta">Empezar gratis</a>
+      <a href="login.html?mode=signup&plan=gratis" class="btn btn-outline plan-cta" onclick="trackPlanClick('gratis')">Empezar gratis</a>
     </div>
     <!-- Básico -->
     <div class="plan-card popular">
@@ -735,7 +746,7 @@ footer {
         <div class="plan-feature">Hasta 3 empleados</div>
         <div class="plan-feature muted">Integraciones externas</div>
       </div>
-      <a href="login.html?mode=signup&plan=basico" class="btn btn-primary plan-cta">Empezar 30 días gratis</a>
+      <a href="login.html?mode=signup&plan=basico" class="btn btn-primary plan-cta" onclick="trackPlanClick('basico')">Empezar 30 días gratis</a>
     </div>
     <!-- Pro -->
     <div class="plan-card">
@@ -751,7 +762,7 @@ footer {
         <div class="plan-feature">Soporte prioritario</div>
         <div class="plan-feature">Multi-negocio (hasta 3)</div>
       </div>
-      <a href="login.html?mode=signup&plan=pro" class="btn btn-outline plan-cta">Empezar 30 días gratis</a>
+      <a href="login.html?mode=signup&plan=pro" class="btn btn-outline plan-cta" onclick="trackPlanClick('pro')">Empezar 30 días gratis</a>
     </div>
   </div>
 </section>
@@ -922,7 +933,7 @@ function toggleFaq(el) {
 
 function startDemo(e) {
   e.preventDefault();
-  // Create a demo session in localStorage and go to app
+  if (typeof gtag !== 'undefined') gtag('event', 'demo_start', { event_category: 'engagement' });
   const demoSession = {
     email: 'demo@nomi.es',
     nombre: 'Demo',
@@ -933,6 +944,10 @@ function startDemo(e) {
   };
   localStorage.setItem('nomi_session', JSON.stringify(demoSession));
   window.location.href = 'nomi-app.html';
+}
+
+function trackPlanClick(plan) {
+  if (typeof gtag !== 'undefined') gtag('event', 'plan_click', { event_category: 'conversion', plan: plan });
 }
 
 // Scroll-triggered fade-in animations
