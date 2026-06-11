@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nomi — Gestión de tu negocio</title>
+<title>Nomi — Panel de gestión</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232563eb'/><text y='23' x='5' font-size='20' font-family='system-ui,sans-serif' font-weight='700' fill='white'>N</text></svg>">
 <script>
 // Auth guard — redirect to login if no session
 (function(){
@@ -1517,15 +1519,37 @@ select.form-input { cursor: pointer; }
         <div class="card-header"><span class="card-title" data-es="Datos del negocio" data-en="Business details">Datos del negocio</span></div>
         <div style="padding:18px">
           <div class="form-row three">
-            <div class="form-group"><label class="form-label" data-es="Nombre comercial" data-en="Business name">Nombre comercial</label><input class="form-input" value="Frutería Martínez"></div>
-            <div class="form-group"><label class="form-label">NIF / CIF</label><input class="form-input" value="12345678A"></div>
-            <div class="form-group"><label class="form-label" data-es="Tipo de negocio" data-en="Business type">Tipo de negocio</label><select class="form-input"><option data-es="Autónomo" data-en="Self-employed">Autónomo</option><option>S.L.</option><option>S.A.</option></select></div>
+            <div class="form-group"><label class="form-label" data-es="Nombre comercial" data-en="Business name">Nombre comercial</label><input class="form-input" id="aj-negocio-nombre" placeholder="Ej: Frutería Martínez"></div>
+            <div class="form-group"><label class="form-label">NIF / CIF</label><input class="form-input" id="aj-nif" placeholder="12345678A"></div>
+            <div class="form-group"><label class="form-label" data-es="Tipo de negocio" data-en="Business type">Tipo de negocio</label><select class="form-input" id="aj-tipo-negocio"><option value="autonomo">Autónomo</option><option value="sl">S.L.</option><option value="sa">S.A.</option><option value="otro">Otro</option></select></div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label" data-es="Dirección" data-en="Address">Dirección</label><input class="form-input" value="Calle Mayor 14, Madrid 28001"></div>
-            <div class="form-group"><label class="form-label" data-es="Teléfono" data-en="Phone">Teléfono</label><input class="form-input" value="912 345 678"></div>
+            <div class="form-group"><label class="form-label" data-es="Dirección fiscal" data-en="Address">Dirección fiscal</label><input class="form-input" id="aj-direccion" placeholder="Calle Mayor 14, Madrid 28001"></div>
+            <div class="form-group"><label class="form-label" data-es="Teléfono" data-en="Phone">Teléfono</label><input class="form-input" id="aj-telefono" placeholder="912 345 678"></div>
           </div>
-          <button class="btn btn-primary" data-es="Guardar cambios" data-en="Save changes">Guardar cambios</button>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Email de contacto</label><input class="form-input" id="aj-email-negocio" placeholder="hola@minegocio.es" type="email"></div>
+            <div class="form-group"><label class="form-label">Web (opcional)</label><input class="form-input" id="aj-web" placeholder="www.minegocio.es"></div>
+          </div>
+          <div id="aj-save-ok" style="display:none;color:var(--green);font-size:13px;margin-bottom:10px;font-weight:600">✓ Cambios guardados</div>
+          <button class="btn btn-primary" onclick="saveNegocioData()" data-es="Guardar cambios" data-en="Save changes">Guardar cambios</button>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div class="card-header"><span class="card-title">Cuenta de usuario</span></div>
+        <div style="padding:18px">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="aj-user-nombre" placeholder="Tu nombre"></div>
+            <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="aj-user-email" placeholder="tu@email.com" type="email" readonly style="background:var(--surface2);color:var(--muted)"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Nueva contraseña</label><input class="form-input" id="aj-pass-nueva" placeholder="Mínimo 6 caracteres" type="password"></div>
+            <div class="form-group"><label class="form-label">Confirmar contraseña</label><input class="form-input" id="aj-pass-confirmar" placeholder="Repite la contraseña" type="password"></div>
+          </div>
+          <div id="aj-pass-ok" style="display:none;color:var(--green);font-size:13px;margin-bottom:10px;font-weight:600">✓ Contraseña actualizada</div>
+          <div id="aj-pass-err" style="display:none;color:var(--red);font-size:13px;margin-bottom:10px;font-weight:600"></div>
+          <button class="btn btn-primary" onclick="saveUserData()">Guardar cuenta</button>
         </div>
       </div>
 
@@ -1575,6 +1599,25 @@ select.form-input { cursor: pointer; }
           <div class="settings-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2a5 5 0 100 10A5 5 0 008 2zM8 6v4M8 5.5v-.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div>
           <div class="settings-info"><div class="settings-label">Versión</div><div class="settings-desc">Nomi v1.0 — MVP local · Almacenamiento en tu dispositivo</div></div>
           <span style="font-size:12px;color:var(--muted);padding:5px 12px">v1.0</span>
+        </div>
+      </div>
+      <div class="settings-card" style="border:1.5px solid #fee2e2">
+        <div class="card-header" style="background:#fff5f5"><span class="card-title" style="color:#dc2626">Zona de peligro</span></div>
+        <div class="settings-row">
+          <div class="settings-icon" style="color:#dc2626"><svg viewBox="0 0 16 16" fill="none"><path d="M3 4h10l-1 9H4L3 4zM6 4V2h4v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="settings-info">
+            <div class="settings-label">Borrar todos los datos</div>
+            <div class="settings-desc">Elimina permanentemente todas las ventas, gastos, facturas e inventario. No se puede deshacer.</div>
+          </div>
+          <button class="btn" style="font-size:12px;padding:5px 12px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5" onclick="borrarTodosLosDatos()">Borrar todo</button>
+        </div>
+        <div class="settings-row">
+          <div class="settings-icon" style="color:#dc2626"><svg viewBox="0 0 16 16" fill="none"><path d="M10 8H2M6 5l-3 3 3 3M9 4h3a1 1 0 011 1v6a1 1 0 01-1 1H9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="settings-info">
+            <div class="settings-label">Cerrar sesión</div>
+            <div class="settings-desc">Cierra tu sesión en este dispositivo. Tus datos permanecen guardados.</div>
+          </div>
+          <button class="btn" style="font-size:12px;padding:5px 12px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5" onclick="doLogout()">Cerrar sesión</button>
         </div>
       </div>
     </div><!-- /ajustes -->
@@ -1972,6 +2015,7 @@ function showPage(id, el) {
   const titles = pageTitles[id];
   if (titles) document.getElementById('topbar-title').textContent = titles[currentLang];
   lazyInitCharts(id);
+  if (id === 'ajustes') setTimeout(loadAjustesForm, 0);
 }
 
 // ── CHARTS ─────────────────────────────────────────────
@@ -2709,6 +2753,91 @@ function doLogout() {
   if (!confirm('¿Cerrar sesión?')) return;
   localStorage.removeItem('nomi_session');
   window.location.replace('login.html');
+}
+
+function borrarTodosLosDatos() {
+  if (!confirm('⚠️ ¿Seguro que quieres borrar TODOS los datos? Esta acción no se puede deshacer.')) return;
+  if (!confirm('Última confirmación: se eliminarán ventas, facturas, inventario y gastos permanentemente.')) return;
+  const keysToKeep = ['nomi_session', 'nomi_users'];
+  const allKeys = Object.keys(localStorage).filter(k => k.startsWith('nomi_'));
+  allKeys.forEach(k => { if (!keysToKeep.includes(k)) localStorage.removeItem(k); });
+  NomiDB.ventas = []; NomiDB.gastos = []; NomiDB.facturas = []; NomiDB.inventario = [];
+  renderAll();
+  alert('✓ Datos eliminados. Tu cuenta sigue activa.');
+  showPage('inicio', document.querySelector('.sb-item'));
+}
+
+function saveNegocioData() {
+  const data = {
+    nombre: document.getElementById('aj-negocio-nombre').value,
+    nif: document.getElementById('aj-nif').value,
+    tipo: document.getElementById('aj-tipo-negocio').value,
+    direccion: document.getElementById('aj-direccion').value,
+    telefono: document.getElementById('aj-telefono').value,
+    email: document.getElementById('aj-email-negocio').value,
+    web: document.getElementById('aj-web').value
+  };
+  localStorage.setItem('nomi_datos_negocio', JSON.stringify(data));
+  // Update session negocio name
+  try {
+    const s = JSON.parse(localStorage.getItem('nomi_session') || '{}');
+    if (data.nombre) { s.negocio = data.nombre; localStorage.setItem('nomi_session', JSON.stringify(s)); }
+  } catch(e){}
+  loadSession();
+  const ok = document.getElementById('aj-save-ok');
+  ok.style.display = 'block';
+  setTimeout(() => ok.style.display = 'none', 2500);
+}
+
+function saveUserData() {
+  const passNueva = document.getElementById('aj-pass-nueva').value;
+  const passConf = document.getElementById('aj-pass-confirmar').value;
+  const errEl = document.getElementById('aj-pass-err');
+  const okEl = document.getElementById('aj-pass-ok');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  if (passNueva && passNueva !== passConf) {
+    errEl.textContent = 'Las contraseñas no coinciden.';
+    errEl.style.display = 'block'; return;
+  }
+  if (passNueva && passNueva.length < 6) {
+    errEl.textContent = 'La contraseña debe tener mínimo 6 caracteres.';
+    errEl.style.display = 'block'; return;
+  }
+  try {
+    const s = JSON.parse(localStorage.getItem('nomi_session') || '{}');
+    const nombre = document.getElementById('aj-user-nombre').value;
+    if (nombre) s.nombre = nombre;
+    localStorage.setItem('nomi_session', JSON.stringify(s));
+    // Update password in users list
+    if (passNueva) {
+      const users = JSON.parse(localStorage.getItem('nomi_users') || '[]');
+      const idx = users.findIndex(u => u.email === s.email);
+      if (idx >= 0) { users[idx].pass = hashPass(passNueva); localStorage.setItem('nomi_users', JSON.stringify(users)); }
+    }
+    loadSession();
+    okEl.style.display = 'block';
+    setTimeout(() => okEl.style.display = 'none', 2500);
+    document.getElementById('aj-pass-nueva').value = '';
+    document.getElementById('aj-pass-confirmar').value = '';
+  } catch(e) { errEl.textContent = 'Error al guardar.'; errEl.style.display = 'block'; }
+}
+
+function loadAjustesForm() {
+  try {
+    const data = JSON.parse(localStorage.getItem('nomi_datos_negocio') || '{}');
+    const s = JSON.parse(localStorage.getItem('nomi_session') || '{}');
+    if (document.getElementById('aj-negocio-nombre')) {
+      document.getElementById('aj-negocio-nombre').value = data.nombre || s.negocio || '';
+      document.getElementById('aj-nif').value = data.nif || '';
+      document.getElementById('aj-tipo-negocio').value = data.tipo || 'autonomo';
+      document.getElementById('aj-direccion').value = data.direccion || '';
+      document.getElementById('aj-telefono').value = data.telefono || '';
+      document.getElementById('aj-email-negocio').value = data.email || '';
+      document.getElementById('aj-web').value = data.web || '';
+      document.getElementById('aj-user-nombre').value = s.nombre || '';
+      document.getElementById('aj-user-email').value = s.email || '';
+    }
+  } catch(e){}
 }
 
 lazyInitCharts('inicio');
