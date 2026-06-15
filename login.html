@@ -7,14 +7,15 @@
 <meta name="description" content="Accede a tu cuenta de Nomi o crea una gratis. Gestiona tu negocio en minutos.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232563eb'/><text y='23' x='5' font-size='20' font-family='system-ui,sans-serif' font-weight='700' fill='white'>N</text></svg>">
-<!-- Google Analytics — sustituye G-XXXXXXXXXX por tu Measurement ID real -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<!-- Google Analytics — sustituye G-8590H2EG43 por tu Measurement ID real -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8590H2EG43"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-XXXXXXXXXX');
+  gtag('config', 'G-8590H2EG43');
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -444,33 +445,37 @@ body {
 </div>
 
 <script>
-// ── Read URL params ──
-const params = new URLSearchParams(location.search);
-const mode = params.get('mode') || 'login';
-const plan = params.get('plan') || '';
+// ══════════════════════════════════════════════════════════════════
+//  NOMI — Auth con Supabase
+//  Sustituye YOUR_PROJECT_URL y YOUR_ANON_KEY con los valores de
+//  tu proyecto en Settings → API de supabase.com
+// ══════════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'YOUR_PROJECT_URL';   // ← pega aquí
+const SUPABASE_KEY = 'YOUR_ANON_KEY';       // ← pega aquí
+const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── Init ──
-switchTab(mode);
+// ── Leer params ───────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+const mode   = params.get('mode') || 'login';
+const plan   = params.get('plan') || '';
 if (plan) sessionStorage.setItem('nomi_plan', plan);
 
-// ── Check if already logged in ──
-const session = localStorage.getItem('nomi_session');
-if (session) {
-  try {
-    const s = JSON.parse(session);
-    if (s && s.email) window.location.replace('nomi-app.html');
-  } catch(e) {}
-}
+// ── Comprobar sesión activa → redirigir al dashboard ─────────────
+(async () => {
+  const { data: { session } } = await _sb.auth.getSession();
+  if (session) window.location.replace('nomi-app.html');
+  else switchTab(mode);
+})();
 
+// ── Utilidades UI ─────────────────────────────────────────────────
 function switchTab(tab) {
   const isLogin = tab === 'login';
-  document.getElementById('tab-login').classList.toggle('active', isLogin);
+  document.getElementById('tab-login').classList.toggle('active',  isLogin);
   document.getElementById('tab-signup').classList.toggle('active', !isLogin);
-  document.getElementById('form-login').style.display = isLogin ? 'block' : 'none';
-  document.getElementById('form-signup').style.display = isLogin ? 'none' : 'block';
+  document.getElementById('form-login').style.display  = isLogin ? 'block' : 'none';
+  document.getElementById('form-signup').style.display = isLogin ? 'none'  : 'block';
   document.getElementById('screen-success').classList.remove('show');
   clearErrors();
-  // Update URL without reload
   const url = new URL(location.href);
   url.searchParams.set('mode', tab);
   history.replaceState(null, '', url);
@@ -502,179 +507,75 @@ function togglePassword(inputId, btn) {
     : '<svg viewBox="0 0 16 16" fill="none"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5zM3 3l10 10" stroke="currentColor" stroke-width="1.3"/></svg>';
 }
 
-// ── SECURITY: SHA-256 via Web Crypto API ──────────────────────────────────
-async function hashPass(p) {
-  const enc = new TextEncoder();
-  const buf = await crypto.subtle.digest('SHA-256', enc.encode(p));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+function setLoading(btnId, loading, text, loadText = 'Un momento...') {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.textContent = loading ? loadText : text;
 }
 
-// Old Math.imul hash — only used for migration detection
-function hashPassLegacy(p) {
-  let h = 0;
-  for (let i = 0; i < p.length; i++) { h = Math.imul(31, h) + p.charCodeAt(i) | 0; }
-  return h.toString(36);
+function showSuccess(msg) {
+  document.getElementById('form-login').style.display  = 'none';
+  document.getElementById('form-signup').style.display = 'none';
+  const sc = document.getElementById('screen-success');
+  sc.querySelector('p').textContent = msg + ' Redirigiendo a tu dashboard...';
+  sc.classList.add('show');
+  setTimeout(() => window.location.replace('nomi-app.html'), 1500);
 }
 
-// A SHA-256 hex hash is always exactly 64 chars; legacy hashes are short base-36
-function isLegacyHash(hash) { return typeof hash === 'string' && hash.length < 20; }
-
-// State for migration flow
-let _migrateEmail = null;
-
-// ── RATE LIMITING ─────────────────────────────────────────────────────────
-const RATE_MAX = 5;
-const RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-
-function getRateKey(email) { return 'nomi_rate_' + email.toLowerCase(); }
-
-function checkRateLimit(email) {
-  const key = getRateKey(email);
-  const raw = localStorage.getItem(key);
-  if (!raw) return { blocked: false, remaining: RATE_MAX };
-  const data = JSON.parse(raw);
-  const now = Date.now();
-  if (now - data.firstAttempt > RATE_WINDOW_MS) {
-    localStorage.removeItem(key);
-    return { blocked: false, remaining: RATE_MAX };
-  }
-  if (data.count >= RATE_MAX) {
-    const waitMin = Math.ceil((RATE_WINDOW_MS - (now - data.firstAttempt)) / 60000);
-    return { blocked: true, waitMin };
-  }
-  return { blocked: false, remaining: RATE_MAX - data.count };
-}
-
-function recordFailedAttempt(email) {
-  const key = getRateKey(email);
-  const raw = localStorage.getItem(key);
-  const now = Date.now();
-  if (!raw) {
-    localStorage.setItem(key, JSON.stringify({ count: 1, firstAttempt: now }));
-  } else {
-    const data = JSON.parse(raw);
-    if (now - data.firstAttempt > RATE_WINDOW_MS) {
-      localStorage.setItem(key, JSON.stringify({ count: 1, firstAttempt: now }));
-    } else {
-      data.count++;
-      localStorage.setItem(key, JSON.stringify(data));
-    }
-  }
-}
-
-function clearRateLimit(email) { localStorage.removeItem(getRateKey(email)); }
-
-// ── SESSION EXPIRY CHECK (7 days) ─────────────────────────────────────────
-(function checkSessionExpiry() {
-  const raw = localStorage.getItem('nomi_session');
-  if (!raw) return;
-  try {
-    const s = JSON.parse(raw);
-    const sevenDays = 7 * 24 * 60 * 60 * 1000;
-    if (!s.demo && s.ts && Date.now() - s.ts > sevenDays) {
-      localStorage.removeItem('nomi_session');
-    }
-  } catch(e) { localStorage.removeItem('nomi_session'); }
-})();
-
-// ── AUTH FUNCTIONS ────────────────────────────────────────────────────────
+// ── LOGIN ─────────────────────────────────────────────────────────
 async function doLogin() {
   clearErrors();
-  const emailRaw = document.getElementById('login-email').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  const email = emailRaw.toLowerCase();
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('login-pass').value;
 
-  let valid = true;
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showFieldError('login-email', 'login-email-err');
-    valid = false;
+    showFieldError('login-email', 'login-email-err'); return;
   }
-  if (!pass) {
-    showFieldError('login-pass', 'login-pass-err');
-    valid = false;
-  }
-  if (!valid) return;
+  if (!pass) { showFieldError('login-pass', 'login-pass-err'); return; }
 
-  // Rate limit check
-  const rate = checkRateLimit(email);
-  if (rate.blocked) {
-    showGlobalError('Demasiados intentos fallidos. Espera ' + rate.waitMin + ' minuto(s) antes de volver a intentarlo.');
-    return;
-  }
+  setLoading('btn-login', true, 'Entrar', 'Entrando...');
 
-  const users = JSON.parse(localStorage.getItem('nomi_users') || '[]');
-  const user = users.find(u => u.email.toLowerCase() === email);
+  const { data, error } = await _sb.auth.signInWithPassword({ email, password: pass });
 
-  if (!user) {
-    showGlobalError('No existe ninguna cuenta con ese email. ¿Quieres registrarte?');
-    return;
-  }
+  setLoading('btn-login', false, 'Entrar');
 
-  // ── Legacy hash migration ──
-  if (isLegacyHash(user.password)) {
-    if (hashPassLegacy(pass) !== user.password) {
-      recordFailedAttempt(email);
-      const rateAfter = checkRateLimit(email);
-      if (rateAfter.blocked) {
-        showGlobalError('Demasiados intentos. Cuenta bloqueada temporalmente durante 15 minutos.');
-      } else {
-        showFieldError('login-pass', 'login-pass-err');
-        document.getElementById('login-pass-err').textContent =
-          'Contraseña incorrecta' + (rateAfter.remaining <= 2 ? ' (' + rateAfter.remaining + ' intentos restantes)' : '');
-      }
-      return;
-    }
-    // Old hash matches — show migration screen
-    clearRateLimit(email);
-    _migrateEmail = email;
-    document.getElementById('form-login').style.display = 'none';
-    document.getElementById('form-signup').style.display = 'none';
-    const sr = document.getElementById('screen-reset');
-    sr.classList.add('show');
-    document.getElementById('reset-pass-old').value = pass; // pre-fill so user only sets new one
-    return;
-  }
-
-  const hashed = await hashPass(pass);
-  if (user.password !== hashed) {
-    recordFailedAttempt(email);
-    const rateAfter = checkRateLimit(email);
-    if (rateAfter.blocked) {
-      showGlobalError('Demasiados intentos. Cuenta bloqueada temporalmente durante 15 minutos.');
+  if (error) {
+    if (error.status === 400) {
+      showGlobalError('Email o contraseña incorrectos.');
+    } else if (error.status === 429) {
+      showGlobalError('Demasiados intentos. Espera unos minutos e inténtalo de nuevo.');
     } else {
-      showFieldError('login-pass', 'login-pass-err');
-      document.getElementById('login-pass-err').textContent =
-        'Contraseña incorrecta' + (rateAfter.remaining <= 2 ? ' (' + rateAfter.remaining + ' intentos restantes)' : '');
+      showGlobalError(error.message);
     }
     return;
   }
 
-  clearRateLimit(email);
   if (typeof gtag !== 'undefined') gtag('event', 'login', { method: 'email' });
-  const session = { email: user.email, nombre: user.nombre, negocio: user.negocio, tipo: user.tipo, ts: Date.now() };
-  localStorage.setItem('nomi_session', JSON.stringify(session));
-  localStorage.setItem('nomi_negocio_nombre', user.negocio || 'Mi Negocio');
-  localStorage.setItem('nomi_user_nombre', user.nombre || '');
-  showSuccess('Bienvenido de nuevo, ' + (user.nombre || 'amigo') + '!');
+  const nombre = data.user.user_metadata?.nombre || 'usuario';
+  showSuccess('Bienvenido de nuevo, ' + nombre + '!');
 }
 
+// ── SIGNUP ────────────────────────────────────────────────────────
 async function doSignup() {
   clearErrors();
-  const nombre = document.getElementById('signup-nombre').value.trim().slice(0, 80);
-  const negocio = document.getElementById('signup-negocio').value.trim().slice(0, 100);
-  const email = document.getElementById('signup-email').value.trim().toLowerCase();
-  const pass = document.getElementById('signup-pass').value;
-  const terms = document.getElementById('terms-check').checked;
+  const nombre   = document.getElementById('signup-nombre').value.trim().slice(0, 80);
+  const apellido = document.getElementById('signup-apellido').value.trim().slice(0, 80);
+  const negocio  = document.getElementById('signup-negocio').value.trim().slice(0, 100);
+  const email    = document.getElementById('signup-email').value.trim().toLowerCase();
+  const pass     = document.getElementById('signup-pass').value;
+  const terms    = document.getElementById('terms-check').checked;
+  const tipo     = document.getElementById('signup-tipo').value;
 
   let valid = true;
-  if (!nombre) { showFieldError('signup-nombre', 'signup-nombre-err'); valid = false; }
+  if (!nombre)  { showFieldError('signup-nombre',  'signup-nombre-err');  valid = false; }
   if (!negocio) { showFieldError('signup-negocio', 'signup-negocio-err'); valid = false; }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showFieldError('signup-email', 'signup-email-err');
-    valid = false;
+    showFieldError('signup-email', 'signup-email-err'); valid = false;
   }
-  if (!pass || pass.length < 6) {
+  if (!pass || pass.length < 8) {
     showFieldError('signup-pass', 'signup-pass-err');
+    document.getElementById('signup-pass-err').textContent = 'Mínimo 8 caracteres.';
     valid = false;
   }
   if (!terms) {
@@ -683,116 +584,70 @@ async function doSignup() {
   }
   if (!valid) return;
 
-  const users = JSON.parse(localStorage.getItem('nomi_users') || '[]');
-  if (users.find(u => u.email.toLowerCase() === email)) {
-    showFieldError('signup-email', 'signup-email-err');
-    document.getElementById('signup-email-err').textContent = 'Ya existe una cuenta con ese email. Inicia sesión.';
+  setLoading('btn-signup', true, 'Crear cuenta', 'Creando cuenta...');
+
+  const { data, error } = await _sb.auth.signUp({
+    email,
+    password: pass,
+    options: {
+      data: {
+        nombre, apellido, negocio, tipo,
+        plan: plan || sessionStorage.getItem('nomi_plan') || 'basico'
+      }
+    }
+  });
+
+  setLoading('btn-signup', false, 'Crear cuenta');
+
+  if (error) {
+    if (error.status === 422 || error.message?.includes('already')) {
+      showFieldError('signup-email', 'signup-email-err');
+      document.getElementById('signup-email-err').textContent = 'Ya existe una cuenta con ese email. Inicia sesión.';
+    } else {
+      showGlobalError(error.message);
+    }
     return;
   }
 
-  const tipo = document.getElementById('signup-tipo').value;
-  const hashed = await hashPass(pass);
-  const newUser = {
-    email, nombre,
-    apellido: document.getElementById('signup-apellido').value.trim().slice(0, 80),
-    negocio, tipo,
-    password: hashed,
-    plan: plan || sessionStorage.getItem('nomi_plan') || 'basico',
-    createdAt: new Date().toISOString()
-  };
-  users.push(newUser);
-  localStorage.setItem('nomi_users', JSON.stringify(users));
-
-  const session = { email, nombre, negocio, tipo, ts: Date.now() };
-  localStorage.setItem('nomi_session', JSON.stringify(session));
-  localStorage.setItem('nomi_negocio_nombre', negocio);
-  localStorage.setItem('nomi_user_nombre', nombre);
-  if (typeof gtag !== 'undefined') gtag('event', 'sign_up', { method: 'email', plan: newUser.plan });
+  if (typeof gtag !== 'undefined') gtag('event', 'sign_up', { method: 'email' });
   showSuccess('¡Cuenta creada! Bienvenido a Nomi, ' + nombre + '.');
 }
 
-function doSocialLogin(provider) {
-  const session = {
-    email: 'usuario@demo.com',
-    nombre: 'Usuario Demo',
-    negocio: 'Mi Negocio',
-    tipo: 'otro',
-    provider,
-    ts: Date.now()
-  };
-  localStorage.setItem('nomi_session', JSON.stringify(session));
-  localStorage.setItem('nomi_negocio_nombre', 'Mi Negocio');
-  localStorage.setItem('nomi_user_nombre', 'Usuario Demo');
-  showSuccess('Conectado con ' + provider + '. Redirigiendo...');
+// ── GOOGLE LOGIN ──────────────────────────────────────────────────
+async function doSocialLogin(provider) {
+  if (provider.toLowerCase() === 'google') {
+    await _sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/nomi-app.html' }
+    });
+  } else {
+    showGlobalError('Login con ' + provider + ' próximamente.');
+  }
 }
 
-function showSuccess(msg) {
-  document.getElementById('form-login').style.display = 'none';
-  document.getElementById('form-signup').style.display = 'none';
-  const sc = document.getElementById('screen-success');
-  sc.querySelector('p').textContent = msg + ' Redirigiendo a tu dashboard...';
-  sc.classList.add('show');
-  setTimeout(() => { window.location.replace('nomi-app.html'); }, 1500);
-}
-
-function showForgot(e) {
+// ── RECUPERAR CONTRASEÑA ──────────────────────────────────────────
+async function showForgot(e) {
   e.preventDefault();
-  alert('Recuperación de contraseña: en breve recibirás un email (funcionalidad próximamente).');
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  if (!email) {
+    showFieldError('login-email', 'login-email-err');
+    document.getElementById('login-email-err').textContent = 'Introduce tu email para recuperar la contraseña.';
+    return;
+  }
+  const { error } = await _sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/login.html?mode=reset'
+  });
+  if (!error) {
+    showGlobalError('Revisa tu email — te hemos enviado un enlace para restablecer la contraseña.');
+    document.getElementById('global-error').style.color = '#16a34a'; // verde
+  }
 }
 
-// ── PASSWORD MIGRATION ────────────────────────────────────────────────────
-async function doMigratePassword() {
-  const errEl = document.getElementById('reset-global-err');
-  errEl.classList.remove('show');
-  document.getElementById('reset-pass-old-err').classList.remove('show');
-  document.getElementById('reset-pass-old').classList.remove('error');
-  document.getElementById('reset-pass-new-err').classList.remove('show');
-  document.getElementById('reset-pass-new').classList.remove('error');
-
-  const oldPass = document.getElementById('reset-pass-old').value;
-  const newPass = document.getElementById('reset-pass-new').value;
-
-  if (!newPass || newPass.length < 6) {
-    document.getElementById('reset-pass-new').classList.add('error');
-    document.getElementById('reset-pass-new-err').classList.add('show');
-    return;
-  }
-
-  const users = JSON.parse(localStorage.getItem('nomi_users') || '[]');
-  const idx = users.findIndex(u => u.email.toLowerCase() === _migrateEmail);
-  if (idx === -1) {
-    errEl.textContent = 'Error: usuario no encontrado.';
-    errEl.classList.add('show');
-    return;
-  }
-
-  // Verify old pass one more time
-  if (hashPassLegacy(oldPass) !== users[idx].password) {
-    document.getElementById('reset-pass-old').classList.add('error');
-    document.getElementById('reset-pass-old-err').classList.add('show');
-    return;
-  }
-
-  // Upgrade to SHA-256
-  users[idx].password = await hashPass(newPass);
-  localStorage.setItem('nomi_users', JSON.stringify(users));
-
-  const user = users[idx];
-  const session = { email: user.email, nombre: user.nombre, negocio: user.negocio, tipo: user.tipo, ts: Date.now() };
-  localStorage.setItem('nomi_session', JSON.stringify(session));
-  localStorage.setItem('nomi_negocio_nombre', user.negocio || 'Mi Negocio');
-  localStorage.setItem('nomi_user_nombre', user.nombre || '');
-
-  document.getElementById('screen-reset').classList.remove('show');
-  showSuccess('¡Contraseña actualizada! Bienvenido de nuevo, ' + (user.nombre || 'amigo') + '.');
-}
-
-// Enter key support
+// ── ENTER KEY ─────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
-  const tab = document.getElementById('form-login').style.display !== 'none' ? 'login' : 'signup';
-  if (tab === 'login') doLogin();
-  else doSignup();
+  const loginVisible = document.getElementById('form-login').style.display !== 'none';
+  if (loginVisible) doLogin(); else doSignup();
 });
 </script>
 </body>

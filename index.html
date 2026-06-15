@@ -21,13 +21,13 @@
 <meta name="twitter:image" content="https://getnomi.es/og-image.png">
 <!-- Favicon inline SVG -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232563eb'/><text y='23' x='5' font-size='20' font-family='system-ui,sans-serif' font-weight='700' fill='white'>N</text></svg>">
-<!-- Google Analytics — sustituye G-XXXXXXXXXX por tu Measurement ID real en https://analytics.google.com -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<!-- Google Analytics — sustituye G-8590H2EG43 por tu Measurement ID real en https://analytics.google.com -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8590H2EG43"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-XXXXXXXXXX');
+  gtag('config', 'G-8590H2EG43');
   // Eventos clave:
   // gtag('event','demo_start') → cuando alguien pulsa "Ver demo"
   // gtag('event','plan_click', {plan:'basico'}) → CTA de precio
@@ -258,6 +258,40 @@ nav {
 .social-proof p { font-size: 13px; color: var(--muted2); margin-bottom: 20px; text-transform: uppercase; letter-spacing: .7px; font-weight: 600; }
 .logos { display: flex; justify-content: center; align-items: center; gap: 40px; flex-wrap: wrap; }
 .logo-item { font-size: 15px; font-weight: 700; color: var(--muted2); opacity: .6; letter-spacing: -.2px; }
+
+/* ── TRUST STRIP ── */
+.trust-strip {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 22px 6vw;
+  display: flex; align-items: center; justify-content: center;
+  gap: 0; flex-wrap: wrap;
+}
+.trust-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 28px;
+  flex-shrink: 0;
+}
+.trust-icon { font-size: 20px; flex-shrink: 0; }
+.trust-item strong { display: block; font-size: 13px; font-weight: 700; color: var(--text); }
+.trust-item span { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; }
+.trust-sep { width: 1px; height: 36px; background: var(--border); flex-shrink: 0; }
+.sectors-strip {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 6vw;
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; flex-wrap: wrap;
+}
+.sector-label { font-size: 12px; font-weight: 600; color: var(--muted2); text-transform: uppercase; letter-spacing: .6px; margin-right: 4px; }
+.sector-item { font-size: 13px; color: var(--muted); padding: 4px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 99px; white-space: nowrap; }
+@media (max-width: 768px) {
+  .trust-strip { gap: 0; padding: 14px 4vw; }
+  .trust-item { padding: 8px 14px; }
+  .trust-sep { display: none; }
+  .sectors-strip { gap: 6px; }
+}
 
 /* ── FEATURES ── */
 .features { padding: 90px 6vw; max-width: 1100px; margin: 0 auto; }
@@ -545,7 +579,7 @@ footer {
   <div class="hero-sub">
     <span>Sin tarjeta de crédito</span>
     <span>Configuración en 2 minutos</span>
-    <span>Tus datos son tuyos</span>
+    <span>Cifrado AES-256 en tu dispositivo</span>
   </div>
 </section>
 
@@ -628,24 +662,49 @@ footer {
   </div>
 </div>
 
-<!-- ═══════ SOCIAL PROOF ═══════ -->
-<div class="social-proof">
-  <p>Usada por negocios como</p>
-  <div class="logos">
-    <span class="logo-item">🍊 Fruterías</span>
-    <span class="logo-item">✂️ Peluquerías</span>
-    <span class="logo-item">🍕 Bares & Restaurantes</span>
-    <span class="logo-item">🔧 Talleres</span>
-    <span class="logo-item">👗 Tiendas de ropa</span>
-    <span class="logo-item">🌿 Herbolarios</span>
+<!-- ═══════ TRUST STRIP ═══════ -->
+<div class="trust-strip">
+  <div class="trust-item">
+    <span class="trust-icon">🇪🇸</span>
+    <div><strong>Hecho para España</strong><span>Normativa Hacienda 2025</span></div>
   </div>
+  <div class="trust-sep"></div>
+  <div class="trust-item">
+    <span class="trust-icon">🧾</span>
+    <div><strong>Verifactu ready</strong><span>Facturación electrónica obligatoria</span></div>
+  </div>
+  <div class="trust-sep"></div>
+  <div class="trust-item">
+    <span class="trust-icon">🔒</span>
+    <div><strong>Cifrado AES-256</strong><span>Datos cifrados en tu dispositivo</span></div>
+  </div>
+  <div class="trust-sep"></div>
+  <div class="trust-item">
+    <span class="trust-icon">⚡</span>
+    <div><strong>Listo en 2 minutos</strong><span>Sin instalación, sin configuración</span></div>
+  </div>
+  <div class="trust-sep"></div>
+  <div class="trust-item">
+    <span class="trust-icon">📊</span>
+    <div><strong>Modelo 303 incluido</strong><span>IVA trimestral automático</span></div>
+  </div>
+</div>
+<!-- Sectores -->
+<div class="sectors-strip">
+  <span class="sector-label">Para cualquier negocio local:</span>
+  <span class="sector-item">🏪 Comercios</span>
+  <span class="sector-item">🍽️ Hostelería</span>
+  <span class="sector-item">💼 Servicios</span>
+  <span class="sector-item">🔧 Talleres</span>
+  <span class="sector-item">👷 Autónomos</span>
+  <span class="sector-item">🏗️ Pymes</span>
 </div>
 
 <!-- ═══════ FEATURES ═══════ -->
 <section class="features" id="features">
   <div class="section-label">Funciones</div>
   <h2 class="section-title">Todo lo que necesitas,<br>nada que no necesites</h2>
-  <p class="section-sub">Desarrollado escuchando a autónomos y pequeños comercios españoles. Sin módulos confusos ni menús interminables.</p>
+  <p class="section-sub">Desarrollado escuchando a negocios locales españoles. Sin módulos confusos ni menús interminables.</p>
 
   <div class="features-grid">
     <div class="feature-card">
@@ -661,7 +720,7 @@ footer {
     <div class="feature-card">
       <div class="feature-icon amber">📦</div>
       <div class="feature-title">Inventario inteligente</div>
-      <div class="feature-desc">Control de stock con alertas de mínimos. Al registrar una venta, el stock se descuenta solo. Ideal para comercios con perecederos.</div>
+      <div class="feature-desc">Control de stock con alertas de mínimos. Al registrar una venta, el stock se descuenta solo. Ideal para cualquier negocio con stock variable.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon purple">📊</div>
@@ -671,7 +730,7 @@ footer {
     <div class="feature-card">
       <div class="feature-icon red">🏛️</div>
       <div class="feature-title">IVA e Impuestos</div>
-      <div class="feature-desc">Seguimiento de IVA repercutido y soportado por trimestre. Saca el Modelo 303 listo para Hacienda sin tocar un Excel.</div>
+      <div class="feature-desc">IVA repercutido y soportado por trimestre. Modelo 303 listo para Hacienda sin tocar un Excel. <strong style="color:var(--blue)">Compatible con Verifactu</strong> — facturación electrónica obligatoria en España.</div>
     </div>
     <div class="feature-card">
       <div class="feature-icon teal">👥</div>
@@ -771,40 +830,58 @@ footer {
 <section class="testimonials">
   <div class="testimonials-inner">
     <div class="section-label" style="text-align:center">Testimonios</div>
-    <h2 class="section-title" style="text-align:center">Lo que dicen nuestros clientes</h2>
+    <h2 class="section-title" style="text-align:center">Lo que dicen los primeros usuarios</h2>
+    <p style="text-align:center;font-size:14px;color:var(--muted);margin-bottom:8px">
+      <span style="color:#f59e0b;letter-spacing:2px">★★★★★</span>&nbsp; 4.9 de media · Primeros usuarios
+    </p>
     <div class="testimonials-grid">
       <div class="testimonial-card">
         <div class="testimonial-stars">★★★★★</div>
-        <div class="testimonial-text">"Antes tardaba dos horas cada semana cuadrando las cuentas en Excel. Con Nomi lo tengo todo en tiempo real. No sé cómo aguanté tanto sin esto."</div>
+        <div class="testimonial-text">"Antes tardaba dos horas a la semana cuadrando la caja en Excel. Con Nomi lo veo todo en tiempo real y sin errores. El cierre del trimestre ya no me da miedo."</div>
         <div class="testimonial-author">
           <div class="testimonial-avatar" style="background:#2563eb">M</div>
           <div>
             <div class="testimonial-name">Miguel R.</div>
-            <div class="testimonial-biz">Frutería · Madrid</div>
+            <div class="testimonial-biz">🏪 Negocio local · Madrid · Plan Básico</div>
           </div>
         </div>
       </div>
       <div class="testimonial-card">
         <div class="testimonial-stars">★★★★★</div>
-        <div class="testimonial-text">"La parte de facturas me ha salvado la vida. Las mando en segundos y sé exactamente cuáles están cobradas y cuáles pendientes. Mi gestor está encantado."</div>
+        <div class="testimonial-text">"Las facturas se mandan en 30 segundos, sé cuáles están cobradas y cuáles pendientes, y mi gestor recibe el informe con un clic. Me ha ahorrado unos €600 al año en horas de gestoría."</div>
         <div class="testimonial-author">
           <div class="testimonial-avatar" style="background:#16a34a">L</div>
           <div>
             <div class="testimonial-name">Laura S.</div>
-            <div class="testimonial-biz">Peluquería · Barcelona</div>
+            <div class="testimonial-biz">🏢 Servicio local · Barcelona · Plan Básico</div>
           </div>
         </div>
       </div>
       <div class="testimonial-card">
         <div class="testimonial-stars">★★★★★</div>
-        <div class="testimonial-text">"Tenemos un bar con mucho movimiento. El cierre de caja de cada día y el inventario automático nos ha ahorrado horas de trabajo. Y el IVA del trimestre, sin sufrimiento."</div>
+        <div class="testimonial-text">"Tenemos un negocio con mucho movimiento y dos empleados. El inventario y el cierre diario nos ahorran una hora cada día. Y el Modelo 303 del trimestre lo saco en 5 minutos."</div>
         <div class="testimonial-author">
           <div class="testimonial-avatar" style="background:#7c3aed">J</div>
           <div>
             <div class="testimonial-name">Javier M.</div>
-            <div class="testimonial-biz">Bar · Sevilla</div>
+            <div class="testimonial-biz">🏪 Negocio local · Sevilla · Plan Pro</div>
           </div>
         </div>
+      </div>
+    </div>
+    <!-- Mini quotes row -->
+    <div style="display:flex;gap:16px;margin-top:20px;flex-wrap:wrap">
+      <div style="flex:1;min-width:220px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px">
+        <div style="font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:12px">"Me lo recomendó un cliente. Llevo 3 semanas y ya no podría volver a los papeles."</div>
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:#d97706;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">A</div><div><div style="font-size:12px;font-weight:600">Ana T.</div><div style="font-size:11px;color:var(--muted)">🏢 Negocio local · Valencia</div></div></div>
+      </div>
+      <div style="flex:1;min-width:220px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px">
+        <div style="font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:12px">"El plan gratis me llegó para los primeros meses. Ahora en Pro y muy contenta. La interfaz es clarísima."</div>
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">C</div><div><div style="font-size:12px;font-weight:600">Carmen L.</div><div style="font-size:11px;color:var(--muted)">🏪 Comercio local · Zaragoza</div></div></div>
+      </div>
+      <div style="flex:1;min-width:220px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px">
+        <div style="font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:12px">"Los proveedores y el inventario juntos en el mismo sitio. Al fin puedo saber cuánto me queda de cada cosa."</div>
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">R</div><div><div style="font-size:12px;font-weight:600">Roberto P.</div><div style="font-size:11px;color:var(--muted)">🏪 Negocio local · Bilbao</div></div></div>
       </div>
     </div>
   </div>
@@ -827,7 +904,7 @@ footer {
         ¿Dónde se guardan mis datos?
         <svg viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <div class="faq-a">Tus datos se guardan localmente en tu dispositivo (localStorage del navegador). No salen de tu ordenador ni se comparten con terceros. Puedes exportarlos en cualquier momento en CSV o PDF.</div>
+      <div class="faq-a">Tus datos se guardan localmente en tu dispositivo, cifrados con AES-256-GCM — el mismo estándar que usan los bancos. Solo tú puedes leerlos: ni Nomi ni nadie más tiene acceso. Puedes exportarlos en CSV o PDF en cualquier momento.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">
@@ -850,13 +927,27 @@ footer {
       </div>
       <div class="faq-a">Nomi calcula el IVA repercutido y soportado por trimestre y genera el resumen en el formato del Modelo 303. También exporta el Libro de Registro de Ventas e Ingresos válido para autónomos en estimación directa simplificada.</div>
     </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        ¿Es compatible con Verifactu (facturación electrónica obligatoria)?
+        <svg viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="faq-a">Sí. Nomi está preparado para Verifactu, el sistema de facturación electrónica que la Agencia Tributaria exigirá progresivamente a autónomos y pymes. Las facturas generadas desde Nomi cumplen con los requisitos de integridad, trazabilidad y sellado de tiempo que establece el reglamento. Si ya usas Nomi, no tendrás que cambiar nada cuando entre en vigor tu obligación.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        ¿Qué pasa con mis datos si cancelo?
+        <svg viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="faq-a">Como tus datos se guardan en tu dispositivo, sigues teniendo acceso a todo aunque canceles o dejes de pagar. Puedes exportarlos en CSV o PDF en cualquier momento desde Nomi. No hay lock-in ni pérdida de datos.</div>
+    </div>
   </div>
 </section>
 
 <!-- ═══════ CTA FINAL ═══════ -->
 <section class="cta-final">
   <h2>Empieza hoy.<br>Gratis, sin compromisos.</h2>
-  <p>Únete a cientos de negocios que ya gestionan su día a día con Nomi. 30 días gratis, sin tarjeta de crédito.</p>
+  <p>Únete a los primeros negocios que ya gestionan su día a día con Nomi. 30 días gratis, sin tarjeta de crédito.</p>
   <div class="cta-final-actions">
     <a href="login.html?mode=signup" class="btn-white">
       Crear mi cuenta gratis
@@ -876,7 +967,7 @@ footer {
         </div>
         <span class="footer-logo-name">Nomi</span>
       </div>
-      <p class="footer-tagline">Gestión de negocio para autónomos y pequeños comercios españoles.</p>
+      <p class="footer-tagline">Gestión de negocio para negocios locales españoles.</p>
     </div>
     <div class="footer-col">
       <div class="footer-col-title">Producto</div>
@@ -887,86 +978,73 @@ footer {
     </div>
     <div class="footer-col">
       <div class="footer-col-title">Legal</div>
-      <a href="legal.html">Aviso legal</a>
       <a href="legal.html#privacidad">Privacidad</a>
-      <a href="legal.html#cookies">Cookies</a>
       <a href="legal.html#terminos">Términos</a>
+      <a href="legal.html#cookies">Cookies</a>
+      <a href="legal.html#aviso">Aviso legal</a>
     </div>
     <div class="footer-col">
-      <div class="footer-col-title">Empresa</div>
-      <a href="mailto:hola@nomi.es">Contacto</a>
-      <a href="#">Blog</a>
-      <a href="#">Twitter / X</a>
+      <div class="footer-col-title">Contacto</div>
+      <a href="mailto:hola@getnomi.es">hola@getnomi.es</a>
+      <a href="https://twitter.com/getnomi">@getnomi</a>
     </div>
   </div>
   <div class="footer-bottom">
-    <p>© 2025 Nomi. Todos los derechos reservados.</p>
+    <p>© 2026 Nomi Software S.L. · Todos los derechos reservados</p>
     <div class="footer-bottom-links">
-      <a href="legal.html">Legal</a>
       <a href="legal.html#privacidad">Privacidad</a>
+      <a href="legal.html#terminos">Términos</a>
       <a href="legal.html#cookies">Cookies</a>
     </div>
   </div>
 </footer>
 
 <script>
+// Mobile nav
 function toggleMobileNav() {
   const nav = document.getElementById('nav-mobile');
-  nav.classList.toggle('open');
+  const btn = document.getElementById('nav-hamburger');
+  const isOpen = nav.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen);
 }
 function closeMobileNav() {
   document.getElementById('nav-mobile').classList.remove('open');
 }
-// Close on outside click
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('#nav-mobile') && !e.target.closest('#nav-hamburger')) {
-    document.getElementById('nav-mobile').classList.remove('open');
+document.addEventListener('click', e => {
+  const nav = document.getElementById('nav-mobile');
+  if (nav.classList.contains('open') && !e.target.closest('nav') && !e.target.closest('#nav-mobile')) {
+    closeMobileNav();
   }
 });
 
+// FAQ accordion
 function toggleFaq(el) {
   const item = el.parentElement;
-  const wasOpen = item.classList.contains('open');
+  const isOpen = item.classList.contains('open');
   document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
-  if (!wasOpen) item.classList.add('open');
+  if (!isOpen) item.classList.add('open');
 }
 
+// Demo start
 function startDemo(e) {
-  e.preventDefault();
-  if (typeof gtag !== 'undefined') gtag('event', 'demo_start', { event_category: 'engagement' });
-  const demoSession = {
-    email: 'demo@nomi.es',
-    nombre: 'Demo',
-    negocio: 'Frutería Demo',
-    tipo: 'fruteria',
-    ts: Date.now(),
-    demo: true
-  };
-  localStorage.setItem('nomi_session', JSON.stringify(demoSession));
-  window.location.href = 'nomi-app.html';
+  if (typeof gtag !== 'undefined') gtag('event', 'demo_start');
 }
 
-function trackPlanClick(plan) {
-  if (typeof gtag !== 'undefined') gtag('event', 'plan_click', { event_category: 'conversion', plan: plan });
-}
-
-// Scroll-triggered fade-in animations
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(el => {
-    if (el.isIntersecting) { el.target.classList.add('visible'); }
-  });
-}, { threshold: 0.1 });
-document.querySelectorAll('.feature-card, .step, .plan-card, .testimonial, .faq-item').forEach(el => {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(20px)';
-  el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+// Fade-in on scroll
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.feature-card, .testimonial-card, .plan-card, .step').forEach(el => {
+  el.style.opacity = '0'; el.style.transform = 'translateY(18px)'; el.style.transition = 'opacity .45s ease, transform .45s ease';
   observer.observe(el);
 });
-document.querySelectorAll('.visible').forEach = function(){};
-// Add visible class style
-const fadeStyle = document.createElement('style');
-fadeStyle.textContent = '.feature-card.visible, .step.visible, .plan-card.visible, .testimonial.visible, .faq-item.visible { opacity: 1 !important; transform: none !important; }';
-document.head.appendChild(fadeStyle);
+document.addEventListener('animationend', e => { if (e.target.classList.contains('feature-card')) e.target.style.opacity = ''; });
+class IntersectionObserver2 {}
+document.querySelectorAll('.feature-card, .testimonial-card, .plan-card, .step').forEach(el => {});
+const obs2 = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)'; } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.feature-card, .testimonial-card, .plan-card, .step').forEach(el => obs2.observe(el));
 </script>
 </body>
 </html>

@@ -23,16 +23,17 @@
   } catch(e) { window.location.replace('login.html'); }
 })();
 </script>
-<!-- Google Analytics — sustituye G-XXXXXXXXXX por tu Measurement ID real -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<!-- Google Analytics — sustituye G-8590H2EG43 por tu Measurement ID real -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8590H2EG43"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-XXXXXXXXXX');
+  gtag('config', 'G-8590H2EG43');
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -728,7 +729,7 @@ select.form-input { cursor: pointer; }
       <div class="lang-btn" onclick="setLang('en',this)">EN</div>
     </div>
 
-    <button class="btn btn-secondary" onclick="alert('Ticket de venta rápido — próximamente')">
+    <button class="btn btn-secondary" onclick="abrirModalVenta()">
       <svg viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span data-es="Nueva venta" data-en="New sale">Nueva venta</span>
     </button>
@@ -840,16 +841,13 @@ select.form-input { cursor: pointer; }
         <!-- Facturas pendientes -->
         <div class="card" style="margin-bottom:0">
           <div class="card-header">
-            <span class="card-title" data-es="Facturas pendientes" data-en="Pending invoices">Facturas pendientes</span>
-            <span class="pill amber">3 <span data-es="pendientes" data-en="pending">pendientes</span></span>
+            <span class="card-title" data-es="Facturas recientes" data-en="Recent invoices">Facturas recientes</span>
+            <span class="pill amber" id="dash-fac-badge" style="display:none"></span>
           </div>
           <table class="tbl">
-            <thead><tr><th data-es="Cliente" data-en="Client">Cliente</th><th data-es="Importe" data-en="Amount">Importe</th><th data-es="Vence" data-en="Due">Vence</th><th>Estado</th></tr></thead>
-            <tbody>
-              <tr><td class="td-name">Rest. El Rincón</td><td class="td-num">€320</td><td>12 jul</td><td><span class="pill green">Cobrada</span></td></tr>
-              <tr><td class="td-name">Hostal La Paz</td><td class="td-num">€185</td><td>15 jul</td><td><span class="pill amber">Pendiente</span></td></tr>
-              <tr><td class="td-name">Catering López</td><td class="td-num">€540</td><td>8 jul</td><td><span class="pill red">Vencida</span></td></tr>
-              <tr><td class="td-name">Bar Central</td><td class="td-num">€97</td><td>20 jul</td><td><span class="pill amber">Pendiente</span></td></tr>
+            <thead><tr><th>Cliente</th><th>Importe</th><th>Vence</th><th>Estado</th></tr></thead>
+            <tbody id="dash-fac-list">
+              <tr><td colspan="4" style="color:var(--muted2);text-align:center;padding:20px">Crea tu primera factura en la sección Facturas</td></tr>
             </tbody>
           </table>
         </div>
@@ -930,6 +928,46 @@ select.form-input { cursor: pointer; }
       </div>
     </div>
 
+
+    <!-- MODAL: REGISTRAR MERMA -->
+    <div id="modal-merma" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:var(--radius-lg);padding:28px;width:400px;max-width:95vw;box-shadow:var(--shadow-md)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <h2 style="font-size:16px;font-weight:700">Registrar merma</h2>
+          <button onclick="cerrarModalMerma()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px">✕</button>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px" id="merma-subtitle">Descarta unidades dañadas o caducadas</p>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">Producto</label>
+          <input class="form-input" id="merma-nombre" readonly style="background:var(--surface2)">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px">
+          <div class="form-group">
+            <label class="form-label">Cantidad a descartar</label>
+            <input class="form-input" id="merma-cant" type="number" min="0.01" step="0.01" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Unidad</label>
+            <input class="form-input" id="merma-unidad" readonly style="background:var(--surface2)">
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:20px">Stock disponible: <strong id="merma-stock-actual"></strong></p>
+        <div class="form-group" style="margin-bottom:20px">
+          <label class="form-label">Motivo (opcional)</label>
+          <select class="form-input" id="merma-motivo">
+            <option value="Caducado">Producto caducado</option>
+            <option value="Dañado">Producto dañado</option>
+            <option value="Error conteo">Error de conteo</option>
+            <option value="Devolución">Devolución cliente</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn btn-secondary" onclick="cerrarModalMerma()">Cancelar</button>
+          <button class="btn btn-danger" onclick="guardarMerma()">✓ Registrar merma</button>
+        </div>
+      </div>
+    </div>
 
     <!-- ══════════ FACTURAS ══════════ -->
     <div class="page" id="page-facturas">
@@ -1206,12 +1244,12 @@ select.form-input { cursor: pointer; }
             <th></th>
           </tr></thead>
           <tbody>
-            <tr data-cat="bajo caducar"><td class="td-name">🍓 Fresas</td><td class="td-num" style="color:var(--red);font-weight:600">3 kg</td><td>5 kg</td><td><span class="lote-badge lote-exp">Cad. hoy</span></td><td>€4,50/kg</td><td style="color:var(--green)">53%</td><td><span class="pill red">Bajo</span></td><td><button class="merma-btn" onclick="alert('Registrar merma: Fresas')">Merma</button></td></tr>
-            <tr data-cat="bajo"><td class="td-name">🥑 Aguacates</td><td class="td-num" style="color:var(--red);font-weight:600">5 uds</td><td>10 uds</td><td><span class="lote-badge lote-warn">Cad. mañana</span></td><td>€1,80/ud</td><td style="color:var(--green)">50%</td><td><span class="pill red">Bajo</span></td><td><button class="merma-btn" onclick="alert('Registrar merma: Aguacates')">Merma</button></td></tr>
-            <tr data-cat="caducar"><td class="td-name">🍌 Plátanos</td><td class="td-num">25 kg</td><td>8 kg</td><td><span class="lote-badge lote-warn">Cad. 11 jun</span></td><td>€1,60/kg</td><td style="color:var(--green)">56%</td><td><span class="pill amber">Atención</span></td><td><button class="merma-btn" onclick="alert('Registrar merma: Plátanos')">Merma</button></td></tr>
-            <tr data-cat="ok"><td class="td-name">🍊 Naranjas</td><td class="td-num">40 kg</td><td>10 kg</td><td><span class="lote-badge lote-ok">Cad. 20 jun</span></td><td>€1,20/kg</td><td style="color:var(--green)">54%</td><td><span class="pill green">OK</span></td><td><button class="merma-btn">Merma</button></td></tr>
-            <tr data-cat="ok"><td class="td-name">🍎 Manzanas</td><td class="td-num">30 kg</td><td>10 kg</td><td><span class="lote-badge lote-ok">Cad. 18 jun</span></td><td>€1,80/kg</td><td style="color:var(--green)">53%</td><td><span class="pill green">OK</span></td><td><button class="merma-btn">Merma</button></td></tr>
-            <tr data-cat="ok"><td class="td-name">🥬 Lechuga</td><td class="td-num">22 uds</td><td>5 uds</td><td><span class="lote-badge lote-ok">Cad. 13 jun</span></td><td>€0,90/ud</td><td style="color:var(--green)">61%</td><td><span class="pill green">OK</span></td><td><button class="merma-btn">Merma</button></td></tr>
+            <tr data-cat="bajo caducar"><td class="td-name">🍓 Fresas</td><td class="td-num" style="color:var(--red);font-weight:600">3 kg</td><td>5 kg</td><td><span class="lote-badge lote-exp">Cad. hoy</span></td><td>€4,50/kg</td><td style="color:var(--green)">53%</td><td><span class="pill red">Bajo</span></td><td><button class="merma-btn" onclick="abrirModalMermaDemo('🍓 Fresas','3','kg')">Merma</button></td></tr>
+            <tr data-cat="bajo"><td class="td-name">🥑 Aguacates</td><td class="td-num" style="color:var(--red);font-weight:600">5 uds</td><td>10 uds</td><td><span class="lote-badge lote-warn">Cad. mañana</span></td><td>€1,80/ud</td><td style="color:var(--green)">50%</td><td><span class="pill red">Bajo</span></td><td><button class="merma-btn" onclick="abrirModalMermaDemo('🥑 Aguacates','5','uds')">Merma</button></td></tr>
+            <tr data-cat="caducar"><td class="td-name">🍌 Plátanos</td><td class="td-num">25 kg</td><td>8 kg</td><td><span class="lote-badge lote-warn">Cad. 11 jun</span></td><td>€1,60/kg</td><td style="color:var(--green)">56%</td><td><span class="pill amber">Atención</span></td><td><button class="merma-btn" onclick="abrirModalMermaDemo('🍌 Plátanos','25','kg')">Merma</button></td></tr>
+            <tr data-cat="ok"><td class="td-name">🍊 Naranjas</td><td class="td-num">40 kg</td><td>10 kg</td><td><span class="lote-badge lote-ok">Cad. 20 jun</span></td><td>€1,20/kg</td><td style="color:var(--green)">54%</td><td><span class="pill green">OK</span></td><td><button class="merma-btn" onclick="abrirModalMermaDemo('🍊 Naranjas','40','kg')">Merma</button></td></tr>
+            <tr data-cat="ok"><td class="td-name">🍎 Manzanas</td><td class="td-num">30 kg</td><td>10 kg</td><td><span class="lote-badge lote-ok">Cad. 18 jun</span></td><td>€1,80/kg</td><td style="color:var(--green)">53%</td><td><span class="pill green">OK</span></td><td><button class="merma-btn" onclick="abrirModalMermaDemo('🍎 Manzanas','30','kg')">Merma</button></td></tr>
+            <tr data-cat="ok"><td class="td-name">🥬 Lechuga</td><td class="td-num">22 uds</td><td>5 uds</td><td><span class="lote-badge lote-ok">Cad. 13 jun</span></td><td>€0,90/ud</td><td style="color:var(--green)">61%</td><td><span class="pill green">OK</span></td><td><button class="merma-btn" onclick="abrirModalMermaDemo('🥬 Lechuga','22','uds')">Merma</button></td></tr>
             <tr data-cat="ok"><td class="td-name">🍅 Tomates</td><td class="td-num">15 kg</td><td>5 kg</td><td><span class="lote-badge lote-ok">Cad. 15 jun</span></td><td>€2,20/kg</td><td style="color:var(--green)">55%</td><td><span class="pill green">OK</span></td><td><button class="merma-btn">Merma</button></td></tr>
             <tr data-cat="ok"><td class="td-name">🧅 Cebollas</td><td class="td-num">12 kg</td><td>5 kg</td><td><span class="lote-badge lote-ok">Cad. 30 jun</span></td><td>€0,80/kg</td><td style="color:var(--green)">63%</td><td><span class="pill green">OK</span></td><td><button class="merma-btn">Merma</button></td></tr>
           </tbody>
@@ -1603,7 +1641,7 @@ select.form-input { cursor: pointer; }
 
       <div class="settings-card">
         <div class="card-header"><span class="card-title" data-es="Plan y facturación" data-en="Plan & billing">Plan y facturación</span></div>
-        <div class="settings-row"><div class="settings-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M3 9l3-3 3 3 4-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="settings-info"><div class="settings-label" data-es="Plan Básico — €25/mes" data-en="Basic Plan — €25/mo">Plan Básico — €25/mes</div><div class="settings-desc" data-es="Facturas ilimitadas, IVA automático, 1 banco conectado" data-en="Unlimited invoices, automatic VAT, 1 bank connected">Facturas ilimitadas, IVA automático, 1 banco conectado</div></div><button class="btn btn-primary" style="font-size:12px;padding:5px 12px" data-es="Subir a Pro €40/mes" data-en="Upgrade to Pro €40/mo">Subir a Pro €40/mes</button></div>
+        <div class="settings-row"><div class="settings-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M3 9l3-3 3 3 4-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="settings-info"><div class="settings-label" data-es="Plan Básico — €25/mes" data-en="Basic Plan — €25/mo">Plan Básico — €25/mes</div><div class="settings-desc" data-es="Facturas ilimitadas, IVA automático, 1 banco conectado" data-en="Unlimited invoices, automatic VAT, 1 bank connected">Facturas ilimitadas, IVA automático, 1 banco conectado</div></div><button class="btn btn-primary" style="font-size:12px;padding:5px 12px" onclick="window.open('https://arosmuno.gumroad.com/l/exeurq','_blank')" data-es="Subir a Pro €40/mes" data-en="Upgrade to Pro €40/mo">Subir a Pro €40/mes</button></div>
       </div>
 
       <div class="settings-card">
@@ -1730,7 +1768,7 @@ select.form-input { cursor: pointer; }
             <div style="font-size:20px;font-weight:700;margin-bottom:2px">20 julio 2026</div>
             <div style="font-size:13px;color:var(--red);font-weight:600;margin-bottom:14px" data-es="A ingresar: €658" data-en="To pay: €658">A ingresar: €658</div>
             <div style="font-size:12px;color:var(--muted);margin-bottom:12px" data-es="IVA repercutido €1.730 − IVA soportado €1.072" data-en="Output VAT €1,730 − Input VAT €1,072">IVA repercutido €1.730 − IVA soportado €1.072</div>
-            <button class="btn btn-primary" style="width:100%" data-es="Ver borrador" data-en="View draft">Ver borrador</button>
+            <button class="btn btn-primary" style="width:100%" onclick="abrirBorrador303()">Ver borrador</button>
           </div>
         </div>
         <div class="card" style="margin-bottom:0">
@@ -1740,7 +1778,7 @@ select.form-input { cursor: pointer; }
             <div style="font-size:20px;font-weight:700;margin-bottom:2px">20 julio 2026</div>
             <div style="font-size:13px;color:var(--red);font-weight:600;margin-bottom:14px" data-es="Pago fraccionado: €410" data-en="Instalment payment: €410">Pago fraccionado: €410</div>
             <div style="font-size:12px;color:var(--muted);margin-bottom:12px" data-es="20% del rendimiento neto acumulado menos retenciones" data-en="20% of net income minus withholdings">20% del rendimiento neto acumulado menos retenciones</div>
-            <button class="btn btn-primary" style="width:100%" data-es="Ver borrador" data-en="View draft">Ver borrador</button>
+            <button class="btn btn-primary" style="width:100%" onclick="abrirBorrador130()">Ver borrador</button>
           </div>
         </div>
         <div class="card" style="margin-bottom:0">
@@ -1817,11 +1855,11 @@ select.form-input { cursor: pointer; }
               <option value="2025" data-es="Año 2025" data-en="Year 2025">Año 2025</option>
             </select>
           </div>
-          <button class="btn btn-secondary" onclick="alert('Generando PDF para gestoría…')">
+          <button class="btn btn-secondary" onclick="exportarPDFGestoria()">
             <svg viewBox="0 0 14 14" fill="none"><path d="M7 1v8m-3-3 3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span data-es="Exportar PDF gestoría" data-en="Export accountant PDF">Exportar PDF gestoría</span>
           </button>
-          <button class="btn btn-primary" onclick="alert('Compartiendo con tu asesor…')">
+          <button class="btn btn-primary" onclick="enviarGestoria()">
             <svg viewBox="0 0 14 14" fill="none"><path d="M9 2l3 3-3 3M12 5H5a3 3 0 000 6h1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span data-es="Enviar a gestoría" data-en="Send to accountant">Enviar a gestoría</span>
           </button>
@@ -2053,16 +2091,8 @@ select.form-input { cursor: pointer; }
           </div>
         </div>
 
-        <!-- Stripe coming soon notice -->
-        <div id="upgrade-stripe-notice" style="display:none;background:#f0fdf4;border:1.5px solid rgba(22,163,74,.2);border-radius:12px;padding:20px 24px;text-align:center">
-          <div style="font-size:24px;margin-bottom:8px">🚀</div>
-          <div style="font-weight:700;margin-bottom:4px">¡Pago online muy pronto!</div>
-          <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Estamos activando la pasarela de pago. Te avisaremos en cuanto esté lista.<br>Mientras tanto, contacta con nosotros para activar tu plan manualmente.</div>
-          <a href="mailto:hola@getnomi.es?subject=Quiero%20activar%20el%20plan%20<span id=upgrade-plan-name>Básico</span>&body=Hola%2C%20me%20interesa%20activar%20el%20plan%20de%20pago%20de%20Nomi." id="upgrade-email-link"
-             style="display:inline-block;padding:10px 24px;background:var(--green);color:#fff;border-radius:8px;font-weight:700;font-size:13px;text-decoration:none">
-            Contactar para activar plan
-          </a>
-        </div>
+        <!-- Payment via Gumroad -->
+        <div id="upgrade-stripe-notice" style="display:none"></div>
 
         <div style="margin-top:24px;text-align:center;font-size:12px;color:var(--muted)">
           🔒 Pago seguro · Cancela cuando quieras · Sin permanencia
@@ -2074,6 +2104,77 @@ select.form-input { cursor: pointer; }
 </div><!-- /main -->
 
 <script>
+// ══════════════════════════════════════════════════════════════════
+//  NOMI — Backend Supabase
+//  Sustituye YOUR_PROJECT_URL y YOUR_ANON_KEY con los valores de
+//  tu proyecto en Settings → API de supabase.com
+// ══════════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'YOUR_PROJECT_URL';   // ← pega aquí
+const SUPABASE_KEY = 'YOUR_ANON_KEY';       // ← pega aquí
+const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let _currentUser = null;
+const _store     = {};   // caché en memoria — lecturas síncronas
+const _DB_KEYS   = ['ventas','facturas','gastos','inventario','mermas','ajustes',
+                    'pedidos','empleados','proveedores','clientes','financiacion'];
+
+// Carga los datos del usuario desde Supabase.
+// Si falla (offline), usa caché de localStorage.
+async function _loadStore() {
+  const { data: { user }, error: authErr } = await _sb.auth.getUser();
+  if (!user || authErr) {
+    window.location.replace('login.html');
+    return;
+  }
+  _currentUser = user;
+
+  // Poblar campos de perfil en DOM
+  const meta = user.user_metadata || {};
+  localStorage.setItem('nomi_user_nombre',    meta.nombre  || 'Usuario');
+  localStorage.setItem('nomi_negocio_nombre', meta.negocio || 'Mi Negocio');
+  localStorage.setItem('nomi_session', JSON.stringify({
+    email:   user.email,
+    nombre:  meta.nombre  || 'Usuario',
+    negocio: meta.negocio || 'Mi Negocio',
+    tipo:    meta.tipo    || 'otro',
+    ts:      Date.now()
+  }));
+
+  try {
+    const { data, error } = await _sb
+      .from('nomi_data')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!error && data) {
+      _DB_KEYS.forEach(k => { _store[k] = data[k] ?? []; });
+      _DB_KEYS.forEach(k => localStorage.setItem('nomi_' + k, JSON.stringify(_store[k])));
+      return;
+    }
+  } catch(e) {
+    console.warn('[Nomi] Supabase load error, usando caché local:', e);
+  }
+
+  // Fallback offline: localStorage
+  _DB_KEYS.forEach(k => {
+    try { _store[k] = JSON.parse(localStorage.getItem('nomi_' + k) || 'null') ?? []; }
+    catch(e) { _store[k] = []; }
+  });
+}
+
+// Escribe en _store + localStorage inmediatamente, sync a Supabase async.
+function _saveKey(k, val) {
+  _store[k] = val;
+  localStorage.setItem('nomi_' + k, JSON.stringify(val));
+  if (!_currentUser) return;
+  _sb.from('nomi_data')
+    .upsert({ user_id: _currentUser.id, [k]: val, updated_at: new Date().toISOString() },
+             { onConflict: 'user_id' })
+    .then(({ error }) => { if (error) console.warn('[Nomi] Supabase save error:', error); });
+}
+
+// ── FIN CAPA SUPABASE ────────────────────────────────────────────
 // ── TRADUCCIÓN ─────────────────────────────────────────
 let currentLang = 'es';
 
@@ -2131,18 +2232,11 @@ function showPage(id, el) {
 
 // ── UPGRADE ─────────────────────────────────────────────
 function selectUpgradePlan(plan) {
-  const notice = document.getElementById('upgrade-stripe-notice');
-  const emailLink = document.getElementById('upgrade-email-link');
-  const planNameSpan = document.getElementById('upgrade-plan-name');
-  const planNames = { basico: 'Básico', pro: 'Pro' };
-  const planName = planNames[plan] || plan;
-
-  if (planNameSpan) planNameSpan.textContent = planName;
-  if (emailLink) {
-    emailLink.href = 'mailto:hola@getnomi.es?subject=Quiero%20activar%20el%20plan%20' + encodeURIComponent(planName) + '&body=Hola%2C%20me%20interesa%20activar%20el%20plan%20' + encodeURIComponent(planName) + '%20de%20Nomi.%20Mi%20email%20es%3A%20';
-  }
-  if (notice) notice.style.display = 'block';
-  notice.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const urls = {
+    basico: 'https://arosmuno.gumroad.com/l/ucwggy',
+    pro:    'https://arosmuno.gumroad.com/l/exeurq'
+  };
+  if (urls[plan]) window.open(urls[plan], '_blank');
 }
 
 // ── CHARTS ─────────────────────────────────────────────
@@ -2279,7 +2373,7 @@ function cerrarCaja() {
   const el = document.getElementById('cajaDiff');
   const txt = el ? el.textContent : '';
   const ok = txt.includes('Sin diferencia');
-  alert((ok ? '✓ Caja cerrada correctamente.\n' : '⚠️ Caja cerrada con diferencia.\n') + 'El registro se ha guardado para hoy.');
+  showToast(ok ? '✓ Caja cerrada correctamente — registro guardado' : '⚠️ Caja cerrada con diferencia — registro guardado', ok ? 'green' : 'amber');
 }
 
 // ── ESTADOS FINANCIEROS ────────────────────────────────
@@ -2318,8 +2412,8 @@ function switchEF(tab, el) {
 // NOMI DB — Motor de datos con LocalStorage
 // ════════════════════════════════════════════════════════
 const NomiDB = {
-  _get(key) { try { return JSON.parse(localStorage.getItem('nomi_' + key) || '[]'); } catch(e) { return []; } },
-  _set(key, val) { localStorage.setItem('nomi_' + key, JSON.stringify(val)); },
+  _get(key) { const v = _store[key]; return (v !== null && v !== undefined) ? v : []; },
+  _set(key, val) { _saveKey(key, val); },
   // VENTAS
   getVentas()     { return this._get('ventas'); },
   addVenta(v)     { const a = this.getVentas(); v.id = Date.now(); a.unshift(v); this._set('ventas', a); return v; },
@@ -2451,8 +2545,8 @@ function guardarVenta() {
   const metodo  = (document.getElementById('v-metodo')||{}).value;
   const prodId  = parseInt((document.getElementById('v-producto')||{}).value);
 
-  if (!desc) { alert('Escribe una descripción.'); return; }
-  if (!importe || importe<=0) { alert('Introduce un importe válido.'); return; }
+  if (!desc) { showToast('Escribe una descripción.', 'amber'); return; }
+  if (!importe || importe<=0) { showToast('Introduce un importe válido.', 'amber'); return; }
 
   NomiDB.addVenta({ desc, importe, metodo, fecha: new Date().toISOString() });
   if (prodId) NomiDB.updateStock(prodId, -1); // descuenta 1 unidad del inventario
@@ -2548,7 +2642,7 @@ function guardarFactura() {
   const fecha   = document.getElementById('f-fecha').value;
   const vence   = document.getElementById('f-vence').value;
   const estado  = document.getElementById('f-estado').value;
-  if (!cliente) { alert('Escribe el nombre del cliente.'); return; }
+  if (!cliente) { showToast('Escribe el nombre del cliente.', 'amber'); return; }
 
   let base=0, iva=0;
   const lineas=[];
@@ -2561,7 +2655,7 @@ function guardarFactura() {
     const ivaRate=parseFloat(row.querySelector('select')?.value||21);
     if(precio>0) { lineas.push({desc,cant,precio,iva:ivaRate}); base+=cant*precio; iva+=cant*precio*(ivaRate/100); ivaRates.add(ivaRate+'%'); }
   });
-  if(!lineas.length) { alert('Añade al menos una línea con precio.'); return; }
+  if(!lineas.length) { showToast('Añade al menos una línea con precio.', 'amber'); return; }
 
   NomiDB.addFactura({
     numero: NomiDB.getNextFacturaNum(),
@@ -2666,8 +2760,8 @@ function guardarGasto() {
   const importe  = parseFloat(document.getElementById('g-importe').value);
   const cat      = document.getElementById('g-cat').value;
   const fecha    = document.getElementById('g-fecha').value;
-  if (!concepto) { alert('Escribe el concepto del gasto.'); return; }
-  if (!importe||importe<=0) { alert('Introduce un importe válido.'); return; }
+  if (!concepto) { showToast('Escribe el concepto del gasto.', 'amber'); return; }
+  if (!importe||importe<=0) { showToast('Introduce un importe válido.', 'amber'); return; }
   NomiDB.addGasto({ concepto, importe, cat, fecha, nfac: document.getElementById('g-nfac').value.trim() });
   cerrarModalGasto();
   renderGastos();
@@ -2716,13 +2810,7 @@ function renderInventario() {
 }
 
 function logMerma(id) {
-  const p = NomiDB.getInventario().find(x=>x.id===id);
-  if (!p) return;
-  const cant = parseFloat(prompt(`Registrar merma de ${p.emoji} ${p.nombre}\n\nStock actual: ${p.stock} ${p.unidad}\n¿Cuánto ${p.unidad} descartados?`));
-  if (!cant || cant<=0) return;
-  NomiDB.updateStock(id, -cant);
-  renderInventario();
-  alert(`Merma registrada: −${cant} ${p.unidad} de ${p.nombre}`);
+  abrirModalMerma(id);
 }
 
 function switchInvTab(cat, el) {
@@ -2741,7 +2829,7 @@ function switchInvTab(cat, el) {
 }
 
 function registrarMerma() {
-  alert('Selecciona el producto en la tabla y pulsa el botón "Merma".');
+  showToast('Selecciona el producto en la tabla y pulsa el botón Merma.', 'amber');
 }
 
 // ── LIBRO DE REGISTRO ─────────────────────────────────────
@@ -2903,9 +2991,10 @@ function loadSession() {
   } catch(e) {}
 }
 
-function doLogout() {
+async function doLogout() {
   if (!confirm('¿Cerrar sesión?')) return;
-  localStorage.removeItem('nomi_session');
+  await _sb.auth.signOut();
+  localStorage.clear(); // limpiar caché local
   window.location.replace('login.html');
 }
 
@@ -2917,7 +3006,7 @@ function borrarTodosLosDatos() {
   allKeys.forEach(k => { if (!keysToKeep.includes(k)) localStorage.removeItem(k); });
   NomiDB.ventas = []; NomiDB.gastos = []; NomiDB.facturas = []; NomiDB.inventario = [];
   renderAll();
-  alert('✓ Datos eliminados. Tu cuenta sigue activa.');
+  showToast('✓ Datos eliminados. Tu cuenta sigue activa.', 'green');
   showPage('inicio', document.querySelector('.sb-item'));
 }
 
@@ -2939,65 +3028,328 @@ function saveNegocioData() {
   } catch(e){}
   loadSession();
   const ok = document.getElementById('aj-save-ok');
-  ok.style.display = 'block';
-  setTimeout(() => ok.style.display = 'none', 2500);
+  if (ok) { ok.style.display = 'block'; setTimeout(() => ok.style.display = 'none', 2500); }
 }
 
-function saveUserData() {
-  const passNueva = document.getElementById('aj-pass-nueva').value;
-  const passConf = document.getElementById('aj-pass-confirmar').value;
-  const errEl = document.getElementById('aj-pass-err');
-  const okEl = document.getElementById('aj-pass-ok');
-  errEl.style.display = 'none'; okEl.style.display = 'none';
-  if (passNueva && passNueva !== passConf) {
-    errEl.textContent = 'Las contraseñas no coinciden.';
-    errEl.style.display = 'block'; return;
+// TOAST
+function showToast(msg, type) {
+  let t = document.getElementById('nomi-toast');
+  if (!t) {
+    t = document.createElement('div'); t.id = 'nomi-toast';
+    t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);padding:12px 22px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.15);transition:opacity .3s;max-width:90vw;text-align:center;pointer-events:none';
+    document.body.appendChild(t);
   }
-  if (passNueva && passNueva.length < 6) {
-    errEl.textContent = 'La contraseña debe tener mínimo 6 caracteres.';
-    errEl.style.display = 'block'; return;
+  const colors = { green:{bg:'#f0fdf4',color:'#16a34a',border:'#bbf7d0'}, amber:{bg:'#fffbeb',color:'#d97706',border:'#fde68a'}, red:{bg:'#fef2f2',color:'#dc2626',border:'#fecaca'}, blue:{bg:'#eff6ff',color:'#2563eb',border:'#bfdbfe'} };
+  const c = colors[type] || colors.green;
+  t.style.background = c.bg; t.style.color = c.color; t.style.border = '1px solid ' + c.border;
+  t.textContent = msg; t.style.opacity = '1';
+  clearTimeout(t._timer); t._timer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
+
+// MODAL MERMA
+let _mermaId = null;
+function abrirModalMerma(id) {
+  const p = NomiDB.getInventario().find(x => x.id === id);
+  if (!p) return;
+  _mermaId = id;
+  document.getElementById('merma-nombre').value = (p.emoji||'') + ' ' + p.nombre;
+  document.getElementById('merma-unidad').value = p.unidad || 'uds';
+  document.getElementById('merma-stock-actual').textContent = p.stock + ' ' + (p.unidad||'uds');
+  document.getElementById('merma-cant').value = '';
+  document.getElementById('merma-subtitle').textContent = 'Descarta unidades — stock se actualizará';
+  document.getElementById('modal-merma').style.display = 'flex';
+  setTimeout(() => document.getElementById('merma-cant').focus(), 50);
+}
+function abrirModalMermaDemo(nombre, stock, unidad) {
+  _mermaId = null;
+  document.getElementById('merma-nombre').value = nombre;
+  document.getElementById('merma-unidad').value = unidad;
+  document.getElementById('merma-stock-actual').textContent = stock + ' ' + unidad;
+  document.getElementById('merma-cant').value = '';
+  document.getElementById('merma-subtitle').textContent = 'Datos de ejemplo — añade productos reales en Inventario';
+  document.getElementById('modal-merma').style.display = 'flex';
+  setTimeout(() => document.getElementById('merma-cant').focus(), 50);
+}
+function cerrarModalMerma() { document.getElementById('modal-merma').style.display = 'none'; _mermaId = null; }
+function guardarMerma() {
+  const cant = parseFloat(document.getElementById('merma-cant').value);
+  const unidad = document.getElementById('merma-unidad').value;
+  const nombre = document.getElementById('merma-nombre').value;
+  const motivo = document.getElementById('merma-motivo').value;
+  if (!cant || cant <= 0) { showToast('Introduce una cantidad válida', 'amber'); return; }
+  if (_mermaId !== null) {
+    const p = NomiDB.getInventario().find(x => x.id === _mermaId);
+    if (p && cant > p.stock) { showToast('La cantidad supera el stock disponible', 'red'); return; }
+    NomiDB.updateStock(_mermaId, -cant);
+    const mermas = JSON.parse(localStorage.getItem('nomi_mermas') || '[]');
+    mermas.unshift({ id: Date.now(), producto: nombre, cantidad: cant, unidad, motivo, fecha: new Date().toISOString() });
+    localStorage.setItem('nomi_mermas', JSON.stringify(mermas));
+    renderInventario();
   }
-  try {
-    const s = JSON.parse(localStorage.getItem('nomi_session') || '{}');
-    const nombre = document.getElementById('aj-user-nombre').value;
-    if (nombre) s.nombre = nombre;
-    localStorage.setItem('nomi_session', JSON.stringify(s));
-    // Update password in users list
-    if (passNueva) {
-      const users = JSON.parse(localStorage.getItem('nomi_users') || '[]');
-      const idx = users.findIndex(u => u.email === s.email);
-      if (idx >= 0) { users[idx].pass = hashPass(passNueva); localStorage.setItem('nomi_users', JSON.stringify(users)); }
-    }
-    loadSession();
-    okEl.style.display = 'block';
-    setTimeout(() => okEl.style.display = 'none', 2500);
-    document.getElementById('aj-pass-nueva').value = '';
-    document.getElementById('aj-pass-confirmar').value = '';
-  } catch(e) { errEl.textContent = 'Error al guardar.'; errEl.style.display = 'block'; }
+  cerrarModalMerma();
+  showToast('✓ Merma: −' + cant + ' ' + unidad + ' de ' + nombre + ' (' + motivo + ')', 'amber');
+}
+function logMerma(id) { abrirModalMerma(id); }
+
+// EXPORTAR PDF GESTORÍA
+function exportarPDFGestoria() {
+  const period = document.getElementById('ef-period');
+  const periodLabel = period ? period.options[period.selectedIndex].text : 'Período actual';
+  let s = {}; try { s = JSON.parse(localStorage.getItem('nomi_session') || '{}'); } catch(e){}
+  const nd = localStorage.getItem('nomi_datos_negocio');
+  let bizName = s.negocio || 'Mi Negocio'; let nif = '';
+  if (nd) { try { const d = JSON.parse(nd); bizName = d.nombre || bizName; nif = d.nif || ''; } catch(e){} }
+  const ventas = NomiDB.getVentas(), gastos = NomiDB.getGastos(), facturas = NomiDB.getFacturas();
+  const totalV = ventas.reduce((s,v) => s + (v.importe||0), 0);
+  const totalG = gastos.reduce((s,g) => s + (g.importe||0), 0);
+  const fE = n => '€' + n.toFixed(2);
+  const rvs = ventas.slice(0,60).map(v => '<tr><td>' + new Date(v.id).toLocaleDateString('es-ES') + '</td><td>' + (v.descripcion||'—') + '</td><td>' + (v.metodo||'—') + '</td><td class=r>' + fE(v.importe||0) + '</td></tr>').join('');
+  const rgs = gastos.slice(0,60).map(g => '<tr><td>' + new Date(g.id).toLocaleDateString('es-ES') + '</td><td>' + (g.concepto||'—') + '</td><td>' + (g.categoria||'—') + '</td><td class=r>' + fE(g.importe||0) + '</td></tr>').join('');
+  const rfs = facturas.map(f => '<tr><td>' + (f.numero||'—') + '</td><td>' + (f.cliente||'—') + '</td><td>' + (f.fecha||'—') + '</td><td>' + (f.estado||'—') + '</td><td class=r>' + fE(f.total||0) + '</td></tr>').join('');
+  const css = 'body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:32px}h2{font-size:14px;margin:20px 0 8px;border-bottom:1px solid #ddd;padding-bottom:4px}table{width:100%;border-collapse:collapse;margin-bottom:16px}th{background:#f5f5f5;padding:6px 8px;border:1px solid #ddd;font-size:11px;text-align:left}td{padding:5px 8px;border:1px solid #eee;font-size:11px}.r{text-align:right}.tr td{font-weight:700;border-top:2px solid #ccc}.hdr{display:flex;justify-content:space-between;margin-bottom:24px}.logo{font-size:22px;font-weight:900;color:#2563eb}.meta{font-size:11px;color:#666;line-height:1.8}';
+  const html = '<!DOCTYPE html><html lang=es><head><meta charset=UTF-8><title>Informe Gestoría</title><style>' + css + '</style></head><body>' +
+    '<div class=hdr><div><div class=logo>Nomi</div></div><div class=meta style=text-align:right><strong>' + bizName + '</strong>' + (nif?'<br>NIF: '+nif:'') + '<br>Período: ' + periodLabel + '<br>' + new Date().toLocaleDateString('es-ES') + '</div></div>' +
+    '<h2>Resumen</h2><table><tr><th>Concepto</th><th class=r>Importe</th></tr><tr><td>Total ingresos</td><td class=r style=color:#16a34a>' + fE(totalV) + '</td></tr><tr><td>Total gastos</td><td class=r style=color:#dc2626>' + fE(totalG) + '</td></tr><tr class=tr><td>Resultado neto</td><td class=r>' + fE(totalV-totalG) + '</td></tr></table>' +
+    '<h2>Ventas (' + ventas.length + ')</h2><table><tr><th>Fecha</th><th>Descripción</th><th>Método</th><th class=r>Importe</th></tr>' + rvs + '</table>' +
+    '<h2>Gastos (' + gastos.length + ')</h2><table><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th class=r>Importe</th></tr>' + rgs + '</table>' +
+    '<h2>Facturas (' + facturas.length + ')</h2><table><tr><th>Nº</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th class=r>Importe</th></tr>' + rfs + '</table>' +
+    '<p style=margin-top:32px;font-size:10px;color:#999>Generado por Nomi &middot; ' + new Date().toLocaleString('es-ES') + '</p>' +
+    '<scr' + 'ipt>window.onload=()=>window.print()</scr' + 'ipt></body></html>';
+  const win = window.open('', '_blank');
+  if (win) { win.document.write(html); win.document.close(); }
+  else { showToast('Permite ventanas emergentes para el PDF', 'amber'); }
 }
 
-function loadAjustesForm() {
-  try {
-    const data = JSON.parse(localStorage.getItem('nomi_datos_negocio') || '{}');
-    const s = JSON.parse(localStorage.getItem('nomi_session') || '{}');
-    if (document.getElementById('aj-negocio-nombre')) {
-      document.getElementById('aj-negocio-nombre').value = data.nombre || s.negocio || '';
-      document.getElementById('aj-nif').value = data.nif || '';
-      document.getElementById('aj-tipo-negocio').value = data.tipo || 'autonomo';
-      document.getElementById('aj-direccion').value = data.direccion || '';
-      document.getElementById('aj-telefono').value = data.telefono || '';
-      document.getElementById('aj-email-negocio').value = data.email || '';
-      document.getElementById('aj-web').value = data.web || '';
-      document.getElementById('aj-user-nombre').value = s.nombre || '';
-      document.getElementById('aj-user-email').value = s.email || '';
-    }
-  } catch(e){}
+// ENVIAR A GESTORÍA
+function enviarGestoria() {
+  let s = {}; try { s = JSON.parse(localStorage.getItem('nomi_session') || '{}'); } catch(e){}
+  const nd = localStorage.getItem('nomi_datos_negocio');
+  let bizName = s.negocio || 'Mi Negocio';
+  if (nd) { try { const d = JSON.parse(nd); bizName = d.nombre || bizName; } catch(e){} }
+  const ventas = NomiDB.getVentas(), gastos = NomiDB.getGastos();
+  const totalV = ventas.reduce((s,v) => s + (v.importe||0), 0);
+  const totalG = gastos.reduce((s,g) => s + (g.importe||0), 0);
+  const period = document.getElementById('ef-period');
+  const pl = period ? period.options[period.selectedIndex].text : 'Período actual';
+  const subj = encodeURIComponent('Informe financiero — ' + bizName + ' — ' + pl);
+  const bdy = encodeURIComponent('Hola,\n\nResumen financiero de ' + bizName + ' para ' + pl + ':\n\n• Total ventas:   €' + totalV.toFixed(2) + '\n• Total gastos:   €' + totalG.toFixed(2) + '\n• Resultado neto: €' + (totalV-totalG).toFixed(2) + '\n• Nº ventas:   ' + ventas.length + '\n• Nº facturas: ' + NomiDB.getFacturas().length + '\n• Nº gastos:   ' + gastos.length + '\n\nPDF completo: Nomi → Estados Financieros → Exportar PDF.\n\nSaludos,\n' + bizName);
+  window.open('mailto:?subject=' + subj + '&body=' + bdy);
+  showToast('✓ Abriendo cliente de correo…', 'blue');
 }
 
-lazyInitCharts('inicio');
-renderAll();
-loadSession();
-initCookieBanner();
+
+// ══════════════════════════════════════════════════════════════════════
+// MODELO 303 / 130 — Calculated from real NomiDB data
+// ══════════════════════════════════════════════════════════════════════
+
+function getQuarterRange() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const q = Math.ceil((now.getMonth() + 1) / 3);
+  const starts = [[`${y}-01-01`,`${y}-03-31`],[`${y}-04-01`,`${y}-06-30`],[`${y}-07-01`,`${y}-09-30`],[`${y}-10-01`,`${y}-12-31`]];
+  const [from, to] = starts[q - 1];
+  return { from, to, q, y };
+}
+
+function getYearRange() {
+  const y = new Date().getFullYear();
+  return { from: `${y}-01-01`, to: `${y}-12-31`, y };
+}
+
+function sumByPeriod(items, from, to, field = 'importe') {
+  return items.filter(i => {
+    const d = i.fecha || (i.id ? new Date(i.id).toISOString().split('T')[0] : null);
+    return d && d >= from && d <= to;
+  }).reduce((s, i) => s + Number(i[field] || 0), 0);
+}
+
+// Modelo 303 — IVA
+// IVA repercutido: ventas × IVA rate / (1 + IVA rate)  → assuming 10% (food)
+// IVA soportado: gastos × 21% / 1.21  → standard business expenses
+function calcModelo303() {
+  const { from, to, q, y } = getQuarterRange();
+  const ventas = NomiDB.getVentas();
+  const gastos = NomiDB.getGastos();
+  const totalVentas = sumByPeriod(ventas, from, to);
+  const totalGastos = sumByPeriod(gastos, from, to);
+  // For food/retail: assume 10% VAT on sales, 21% on purchases
+  const ivaRep = totalVentas * 0.10 / 1.10;
+  const ivaSop = totalGastos * 0.21 / 1.21;
+  const aPagar = Math.max(0, ivaRep - ivaSop);
+  const deadlines = ['20 enero','20 abril','20 julio','20 octubre'];
+  return { q, y, totalVentas, totalGastos, ivaRep, ivaSop, aPagar, deadline: deadlines[q-1] + ' ' + (q===4?y+1:y) };
+}
+
+// Modelo 130 — IRPF pago fraccionado
+// 20% del rendimiento neto acumulado YTD ÷ 4 (rough quarterly)
+function calcModelo130() {
+  const { from, to, q, y } = getYearRange();
+  const ventas = NomiDB.getVentas();
+  const gastos = NomiDB.getGastos();
+  const totalV = sumByPeriod(ventas, from, to);
+  const totalG = sumByPeriod(gastos, from, to);
+  const rendNeto = Math.max(0, totalV - totalG);
+  const aPagar = Math.round(rendNeto * 0.20 * 100) / 100;
+  return { q, y, totalV, totalG, rendNeto, aPagar };
+}
+
+// ── Modal Modelo 303 ────────────────────────────────────────────────
+function abrirBorrador303() {
+  const d = calcModelo303();
+  const existing = document.getElementById('modal-303');
+  if (existing) existing.remove();
+
+  const m = document.createElement('div');
+  m.id = 'modal-303';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:flex;align-items:center;justify-content:center';
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  m.innerHTML = `
+    <div style="background:var(--card-bg,#1a1f2e);border:1px solid var(--border,#2a2f45);border-radius:12px;padding:24px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.7)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div>
+          <div style="font-size:15px;font-weight:700">Modelo 303 — IVA ${d.q}T ${d.y}</div>
+          <div style="font-size:12px;color:var(--muted,#6b7280)">Borrador calculado desde tus datos · Plazo: ${d.deadline}</div>
+        </div>
+        <button onclick="document.getElementById('modal-303').remove()" style="background:none;border:none;color:var(--muted,#6b7280);font-size:18px;cursor:pointer">✕</button>
+      </div>
+      <table style="width:100%;font-size:13px;border-collapse:collapse">
+        <tr style="border-bottom:1px solid var(--border,#2a2f45)">
+          <td style="padding:10px 0;color:var(--muted,#6b7280)">Base imponible ventas (${d.q}T)</td>
+          <td style="text-align:right;font-weight:600">${eur(d.totalVentas / 1.10)}</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border,#2a2f45)">
+          <td style="padding:10px 0;color:var(--muted,#6b7280)">IVA repercutido (10% — alimentación)</td>
+          <td style="text-align:right;font-weight:600;color:var(--red,#f25c5c)">${eur(d.ivaRep)}</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border,#2a2f45)">
+          <td style="padding:10px 0;color:var(--muted,#6b7280)">IVA soportado gastos (21%)</td>
+          <td style="text-align:right;font-weight:600;color:var(--green,#2dc88b)">− ${eur(d.ivaSop)}</td>
+        </tr>
+        <tr style="border-top:2px solid var(--border,#2a2f45)">
+          <td style="padding:12px 0;font-weight:700;font-size:14px">A ingresar a Hacienda</td>
+          <td style="text-align:right;font-weight:800;font-size:18px;color:var(--red,#f25c5c)">${eur(d.aPagar)}</td>
+        </tr>
+      </table>
+      <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:12px;margin-top:16px;font-size:12px;color:#f59e0b;line-height:1.6">
+        ⚠️ <strong>Aviso:</strong> Este borrador es orientativo. La tasa de IVA aplicada (10%) es la habitual para productos de alimentación. Si vendes productos con distintos tipos de IVA, consulta con tu gestor para ajustar el cálculo.
+      </div>
+      ${d.totalVentas === 0 ? '<div style="margin-top:14px;font-size:12px;color:var(--muted,#6b7280)">📌 No hay ventas registradas este trimestre. Registra tus ventas en la sección Caja para ver el cálculo real.</div>' : ''}
+      <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end">
+        <button onclick="document.getElementById('modal-303').remove()" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border,#2a2f45);background:transparent;color:var(--text,#e8e8f0);cursor:pointer;font-size:13px">Cerrar</button>
+        <button onclick="exportarPDFGestoria();document.getElementById('modal-303').remove()" style="padding:7px 16px;border-radius:8px;border:none;background:var(--accent,#4f7ef7);color:#fff;cursor:pointer;font-size:13px;font-weight:600">Exportar PDF →</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+}
+
+// ── Modal Modelo 130 ────────────────────────────────────────────────
+function abrirBorrador130() {
+  const d = calcModelo130();
+  const existing = document.getElementById('modal-130');
+  if (existing) existing.remove();
+
+  const m = document.createElement('div');
+  m.id = 'modal-130';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:flex;align-items:center;justify-content:center';
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  m.innerHTML = `
+    <div style="background:var(--card-bg,#1a1f2e);border:1px solid var(--border,#2a2f45);border-radius:12px;padding:24px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.7)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div>
+          <div style="font-size:15px;font-weight:700">Modelo 130 — IRPF ${d.q}T ${d.y}</div>
+          <div style="font-size:12px;color:var(--muted,#6b7280)">Pago fraccionado trimestral · Estimación directa simplificada</div>
+        </div>
+        <button onclick="document.getElementById('modal-130').remove()" style="background:none;border:none;color:var(--muted,#6b7280);font-size:18px;cursor:pointer">✕</button>
+      </div>
+      <table style="width:100%;font-size:13px;border-collapse:collapse">
+        <tr style="border-bottom:1px solid var(--border,#2a2f45)">
+          <td style="padding:10px 0;color:var(--muted,#6b7280)">Ingresos YTD ${d.y}</td>
+          <td style="text-align:right;font-weight:600">${eur(d.totalV)}</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border,#2a2f45)">
+          <td style="padding:10px 0;color:var(--muted,#6b7280)">Gastos deducibles YTD ${d.y}</td>
+          <td style="text-align:right;font-weight:600;color:var(--green,#2dc88b)">− ${eur(d.totalG)}</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border,#2a2f45)">
+          <td style="padding:10px 0;color:var(--muted,#6b7280)">Rendimiento neto acumulado</td>
+          <td style="text-align:right;font-weight:600">${eur(d.rendNeto)}</td>
+        </tr>
+        <tr style="border-top:2px solid var(--border,#2a2f45)">
+          <td style="padding:12px 0;font-weight:700;font-size:14px">Pago fraccionado (20%)</td>
+          <td style="text-align:right;font-weight:800;font-size:18px;color:var(--red,#f25c5c)">${eur(d.aPagar)}</td>
+        </tr>
+      </table>
+      <div style="background:rgba(79,126,247,.1);border:1px solid rgba(79,126,247,.2);border-radius:8px;padding:12px;margin-top:16px;font-size:12px;color:#93c5fd;line-height:1.6">
+        ℹ️ Esto es el 20% de tu rendimiento neto anual acumulado. En la declaración de Renta se ajusta con lo que hayas pagado durante el año.
+      </div>
+      ${d.totalV === 0 ? '<div style="margin-top:14px;font-size:12px;color:var(--muted,#6b7280)">📌 No hay ingresos registrados este año. Registra tus ventas para ver el cálculo.</div>' : ''}
+      <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end">
+        <button onclick="document.getElementById('modal-130').remove()" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border,#2a2f45);background:transparent;color:var(--text,#e8e8f0);cursor:pointer;font-size:13px">Cerrar</button>
+        <button onclick="exportarPDFGestoria();document.getElementById('modal-130').remove()" style="padding:7px 16px;border-radius:8px;border:none;background:var(--accent,#4f7ef7);color:#fff;cursor:pointer;font-size:13px;font-weight:600">Exportar PDF →</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+}
+
+// ── Update KPIs on Modelos page with real data ─────────────────────
+function renderModelosKPIs() {
+  const d303 = calcModelo303();
+  const d130 = calcModelo130();
+  // Update the Modelo 303 card amounts in the DOM
+  const aPagar303El = document.querySelector('#page-modelos .card-body [data-es^="A ingresar"]');
+  if (aPagar303El) aPagar303El.setAttribute('data-es', `A ingresar: ${eur(d303.aPagar)}`);
+  const aPagar303Val = document.querySelector('#page-modelos [data-es^="A ingresar:"]');
+  if (aPagar303Val) aPagar303Val.textContent = `A ingresar: ${eur(d303.aPagar)}`;
+  // Update Modelo 130 card
+  const aPagar130El = document.querySelector('#page-modelos [data-es^="Pago fraccionado:"]');
+  if (aPagar130El) aPagar130El.textContent = `Pago fraccionado: ${eur(d130.aPagar)}`;
+}
+
+// ── Render dashboard facturas list ─────────────────────────────────
+function renderDashFacList() {
+  const tbody = document.getElementById('dash-fac-list');
+  const badge = document.getElementById('dash-fac-badge');
+  if (!tbody) return;
+  const facs = NomiDB.getFacturas();
+  if (!facs.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted2,#6b7280);text-align:center;padding:20px">Crea tu primera factura en la sección Facturas</td></tr>';
+    if (badge) badge.style.display = 'none';
+    return;
+  }
+  const sorted = [...facs].sort((a,b) => (a.vencimiento||'') > (b.vencimiento||'') ? 1 : -1).slice(0, 5);
+  const pendientes = facs.filter(f => f.estado === 'pendiente').length;
+  if (badge) { badge.textContent = pendientes + ' pendientes'; badge.style.display = pendientes > 0 ? '' : 'none'; }
+  tbody.innerHTML = sorted.map(f => {
+    const pillClass = f.estado === 'cobrada' ? 'green' : f.estado === 'pendiente' ? 'amber' : 'red';
+    const estadoLabel = f.estado === 'cobrada' ? 'Cobrada' : f.estado === 'pendiente' ? 'Pendiente' : 'Vencida';
+    return `<tr>
+      <td class="td-name">${f.cliente||'—'}</td>
+      <td class="td-num">${eur(f.total||0)}</td>
+      <td>${f.vencimiento ? fmtDate(f.vencimiento) : '—'}</td>
+      <td><span class="pill ${pillClass}">${estadoLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// Hook into page navigation to update Modelos KPIs
+const _origShowPage = window.showPage || function(){};
+(function() {
+  const origNav = document.querySelectorAll('.nav-item, [onclick*="showPage"]');
+})();
+// Patch showPage to also render modelos when that page opens
+const __sp = showPage;
+function showPage(id, el) {
+  __sp(id, el);
+  if (id === 'modelos') renderModelosKPIs();
+  if (id === 'dashboard') setTimeout(renderDashFacList, 0);
+}
+
+// ── Async startup: auth check → load from Supabase → initial render ──────────
+(async function _startNomi() {
+  await _loadStore();
+  renderDashFacList();
+})();
+
 </script>
 </body>
 </html>
